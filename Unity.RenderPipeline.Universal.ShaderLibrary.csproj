@@ -58,21 +58,21 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-     <Compile Include="Assets\Scripts\Rendering\CustomURP\ShaderLibrary\ShaderTypes.cs" />
-     <None Include="Assets\Scripts\Rendering\CustomURP\ShaderLibrary\Input.hlsl" />
-     <None Include="Assets\Scripts\Rendering\CustomURP\ShaderLibrary\Core.hlsl" />
-     <None Include="Assets\Scripts\Rendering\CustomURP\ShaderLibrary\SurfaceInput.hlsl" />
-     <None Include="Assets\Scripts\Rendering\CustomURP\ShaderLibrary\UnityInput.hlsl" />
-     <None Include="Assets\Scripts\Rendering\CustomURP\ShaderLibrary\Lighting.hlsl" />
-     <None Include="Assets\Scripts\Rendering\CustomURP\ShaderLibrary\Particles.hlsl" />
-     <None Include="Assets\Scripts\Rendering\CustomURP\ShaderLibrary\Deprecated.hlsl" />
-     <None Include="Assets\Scripts\Rendering\CustomURP\ShaderLibrary\DeclareOpaqueTexture.hlsl" />
-     <None Include="Assets\Scripts\Rendering\CustomURP\ShaderLibrary\ShaderGraphFunctions.hlsl" />
-     <None Include="Assets\Scripts\Rendering\CustomURP\ShaderLibrary\ShaderTypes.cs.hlsl" />
-     <None Include="Assets\Scripts\Rendering\CustomURP\ShaderLibrary\Unity.RenderPipelines.Universal.ShaderLibrary.asmdef" />
-     <None Include="Assets\Scripts\Rendering\CustomURP\ShaderLibrary\Shadows.hlsl" />
-     <None Include="Assets\Scripts\Rendering\CustomURP\ShaderLibrary\MetaInput.hlsl" />
-     <None Include="Assets\Scripts\Rendering\CustomURP\ShaderLibrary\DeclareDepthTexture.hlsl" />
+     <Compile Include="\Users\hanyi\work\project\ClusterForwardURP\CustomPackage\com.unity.render-pipelines.universal\ShaderLibrary\ShaderTypes.cs" />
+     <None Include="\Users\hanyi\work\project\ClusterForwardURP\CustomPackage\com.unity.render-pipelines.universal\ShaderLibrary\Input.hlsl" />
+     <None Include="\Users\hanyi\work\project\ClusterForwardURP\CustomPackage\com.unity.render-pipelines.universal\ShaderLibrary\Core.hlsl" />
+     <None Include="\Users\hanyi\work\project\ClusterForwardURP\CustomPackage\com.unity.render-pipelines.universal\ShaderLibrary\SurfaceInput.hlsl" />
+     <None Include="\Users\hanyi\work\project\ClusterForwardURP\CustomPackage\com.unity.render-pipelines.universal\ShaderLibrary\UnityInput.hlsl" />
+     <None Include="\Users\hanyi\work\project\ClusterForwardURP\CustomPackage\com.unity.render-pipelines.universal\ShaderLibrary\Lighting.hlsl" />
+     <None Include="\Users\hanyi\work\project\ClusterForwardURP\CustomPackage\com.unity.render-pipelines.universal\ShaderLibrary\Particles.hlsl" />
+     <None Include="\Users\hanyi\work\project\ClusterForwardURP\CustomPackage\com.unity.render-pipelines.universal\ShaderLibrary\Deprecated.hlsl" />
+     <None Include="\Users\hanyi\work\project\ClusterForwardURP\CustomPackage\com.unity.render-pipelines.universal\ShaderLibrary\DeclareOpaqueTexture.hlsl" />
+     <None Include="\Users\hanyi\work\project\ClusterForwardURP\CustomPackage\com.unity.render-pipelines.universal\ShaderLibrary\ShaderGraphFunctions.hlsl" />
+     <None Include="\Users\hanyi\work\project\ClusterForwardURP\CustomPackage\com.unity.render-pipelines.universal\ShaderLibrary\ShaderTypes.cs.hlsl" />
+     <None Include="\Users\hanyi\work\project\ClusterForwardURP\CustomPackage\com.unity.render-pipelines.universal\ShaderLibrary\Unity.RenderPipelines.Universal.ShaderLibrary.asmdef" />
+     <None Include="\Users\hanyi\work\project\ClusterForwardURP\CustomPackage\com.unity.render-pipelines.universal\ShaderLibrary\Shadows.hlsl" />
+     <None Include="\Users\hanyi\work\project\ClusterForwardURP\CustomPackage\com.unity.render-pipelines.universal\ShaderLibrary\MetaInput.hlsl" />
+     <None Include="\Users\hanyi\work\project\ClusterForwardURP\CustomPackage\com.unity.render-pipelines.universal\ShaderLibrary\DeclareDepthTexture.hlsl" />
  <Reference Include="Unity.RenderPipelines.Core.Runtime">
  <HintPath>/Users/hanyi/work/project/ClusterForwardURP/Library/ScriptAssemblies/Unity.RenderPipelines.Core.Runtime.dll</HintPath>
  </Reference>

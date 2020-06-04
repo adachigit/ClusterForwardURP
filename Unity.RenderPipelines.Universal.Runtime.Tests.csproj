@@ -58,10 +58,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-     <Compile Include="Assets\Scripts\Rendering\CustomURP\Tests\Runtime\Light2DTests.cs" />
-     <Compile Include="Assets\Scripts\Rendering\CustomURP\Tests\Runtime\PixelPerfectCameraTests.cs" />
-     <Compile Include="Assets\Scripts\Rendering\CustomURP\Tests\Runtime\RuntimeTests.cs" />
-     <None Include="Assets\Scripts\Rendering\CustomURP\Tests\Runtime\Unity.RenderPipelines.Universal.Runtime.Tests.asmdef" />
+     <Compile Include="Assets\CustomURP\Tests\Runtime\Light2DTests.cs" />
+     <Compile Include="Assets\CustomURP\Tests\Runtime\PixelPerfectCameraTests.cs" />
+     <Compile Include="Assets\CustomURP\Tests\Runtime\RuntimeTests.cs" />
+     <None Include="Assets\CustomURP\Tests\Runtime\Unity.RenderPipelines.Universal.Runtime.Tests.asmdef" />
  <Reference Include="UnityEngine.TestRunner">
  <HintPath>/Users/hanyi/work/project/ClusterForwardURP/Library/ScriptAssemblies/UnityEngine.TestRunner.dll</HintPath>
  </Reference>
