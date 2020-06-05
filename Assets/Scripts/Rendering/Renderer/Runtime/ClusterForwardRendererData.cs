@@ -34,6 +34,8 @@ namespace Rendering.RenderPipeline
         [SerializeField] int m_ClusterGridSizeX;
         [SerializeField] int m_ClusterGridSizeY;
         [SerializeField] int m_ClusterZCount;
+
+        [SerializeField] bool m_ZPriority;
         
         protected override ScriptableRenderer Create()
         {
@@ -43,37 +45,26 @@ namespace Rendering.RenderPipeline
         public float maxClusterZFar
         {
             get => m_MaxClusterZFar;
-            set
-            {
-                m_MaxClusterZFar = value;
-            }
         }
 
         public int clusterGridSizeX
         {
             get => m_ClusterGridSizeX;
-            set
-            {
-                m_ClusterGridSizeX = value;
-            }
         }
 
         public int clusterGridSizeY
         {
             get => m_ClusterGridSizeY;
-            set
-            {
-                m_ClusterGridSizeY = value;
-            }
         }
 
         public int clusterZCount
         {
             get => m_ClusterZCount;
-            set
-            {
-                m_ClusterZCount = value;
-            }
+        }
+
+        public bool zPriority
+        {
+            get => m_ZPriority;
         }
     }
 }

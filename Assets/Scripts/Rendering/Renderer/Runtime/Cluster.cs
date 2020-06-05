@@ -4,6 +4,8 @@ using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 using Utils;
+using Collision = Utils.Collision;
+using static Unity.Mathematics.math;
 
 namespace Rendering.RenderPipeline
 {
@@ -69,21 +71,21 @@ namespace Rendering.RenderPipeline
             var camera = renderingData.cameraData.camera;
             m_UseStructuredBuffer = RenderingUtility.CheckUseStructuredBuffer(ref renderingData);
 
-            if (camera.pixelWidth != m_ScreenWidth || camera.pixelHeight != m_ScreenHeight || !MathUtility.NearlyEquals(m_RendererData.maxClusterZFar, m_MaxClusterZFar))
+            if (camera.pixelWidth != m_ScreenWidth || camera.pixelHeight != m_ScreenHeight)
             {
                 m_ScreenWidth = camera.pixelWidth;
                 m_ScreenHeight = camera.pixelHeight;
                 m_CameraNearZ = camera.nearClipPlane;
                 m_MaxClusterZFar = m_RendererData.maxClusterZFar;
                 
-                if (!BuildClusters())
+                if (!BuildClusters(camera))
                     return false;
             }
             
             return true;
         }
 
-        private bool BuildClusters()
+        private bool BuildClusters(Camera camera)
         {
             ComputeClusterCount();
             m_ClusterTotalCount = m_ClusterCountX * m_ClusterCountY * m_ClusterCountZ;
@@ -96,6 +98,58 @@ namespace Rendering.RenderPipeline
             m_ClusterZDistances = new NativeArray<float>(m_ClusterCountZ + 1, Allocator.Persistent);
             
             ComputeZDistances();
+
+            float4x4 inverseProjMat = GL.GetGPUProjectionMatrix(camera.projectionMatrix, false).inverse;
+            float2 screenDimension = float2(m_ScreenWidth, m_ScreenHeight);
+            int3 clusterDimension = int3(m_ClusterCountX, m_ClusterCountY, m_ClusterCountZ);
+            float3 eye = float3(0, 0, 0);
+            
+            for (int z = 0; z < m_ClusterCountZ; ++z)
+            {
+                var zClusterNear = m_ClusterZDistances[z];
+                var zClusterFar = m_ClusterZDistances[z + 1];
+                
+                Collision.Collider.Plane nearPlane = new Collision.Collider.Plane
+                {
+                    normal = float3(0.0f, 0.0f, -1.0f),
+                    distance = zClusterNear,
+                };
+                Collision.Collider.Plane farPlane = new Collision.Collider.Plane
+                {
+                    normal = float3(0.0f, 0.0f, -1.0f),
+                    distance = zClusterFar,
+                };
+                
+                for (int x = 0; x < m_ClusterCountX; ++x)
+                {
+                    for (int y = 0; y < m_ClusterCountY; ++y)
+                    {
+                        float3 pMin = float3(x * m_ClusterGridSizeX, y * m_ClusterGridSizeY, 0.0f);
+                        float3 pMax = float3((x + 1) * m_ClusterGridSizeX, (y + 1) * m_ClusterGridSizeY, 0.0f);
+
+                        pMin = RenderingHelper.ScreenToView(float4(pMin, 1.0f), screenDimension, ref inverseProjMat).xyz;
+                        pMax = RenderingHelper.ScreenToView(float4(pMax, 1.0f), screenDimension, ref inverseProjMat).xyz;
+//                        pMin.z *= -1;
+//                        pMax.z *= -1;
+                        //将两个点放大两倍，以确保可以和cluster的远近平面相交
+                        pMin *= 2;
+                        pMax *= 2;
+
+                        float3 minNear, maxNear, minFar, maxFar;
+                        Collision.Evaluation.IntersectionOfSegmentWithPlane(ref eye, ref pMin, ref nearPlane, out minNear);
+                        Collision.Evaluation.IntersectionOfSegmentWithPlane(ref eye, ref pMax, ref nearPlane, out maxNear);
+                        Collision.Evaluation.IntersectionOfSegmentWithPlane(ref eye, ref pMin, ref farPlane, out minFar);
+                        Collision.Evaluation.IntersectionOfSegmentWithPlane(ref eye, ref pMax, ref farPlane, out maxFar);
+
+                        float3 aabbMin = math.min(minNear, math.min(maxNear, math.min(minFar, maxFar)));
+                        float3 aabbMax = math.max(minNear, math.max(maxNear, math.max(minFar, maxFar)));
+                        int clusterIndex1D = GetClusterIndex1D(int3(x, y, z), clusterDimension, m_RendererData.zPriority);
+                        
+                        m_ClusterAABBs[clusterIndex1D] = new DataType.AABB { min = aabbMin, max = aabbMax };
+                        m_ClusterSpheres[clusterIndex1D] = new DataType.Sphere { center = (aabbMin + aabbMax) / 2.0f, radius = math.distance(aabbMin, aabbMax) / 2.0f };
+                    }
+                }
+            }
             
             return true;
         }
@@ -170,6 +224,36 @@ namespace Rendering.RenderPipeline
         public void Dispose()
         {
             ReleaseClusterNativeArray();
+        }
+
+        public static int GetClusterIndex1D(int3 index3D, int3 clusterDimension, bool zPrior)
+        {
+            if (zPrior)
+            {
+                return index3D.y * clusterDimension.x * clusterDimension.z + index3D.x * clusterDimension.z + index3D.z;
+            }
+            else
+            {
+                return index3D.z * clusterDimension.x * clusterDimension.y + index3D.y * clusterDimension.x + index3D.x;
+            }
+        }
+
+        public static int3 GetClusterIndex3D(int index1D, int3 clusterDimension, bool zPrior)
+        {
+            if (zPrior)
+            {
+                return int3(index1D % (clusterDimension.x * clusterDimension.z) / clusterDimension.z,
+                            index1D / (clusterDimension.x * clusterDimension.z),
+                            index1D % clusterDimension.z
+                            );
+            }
+            else
+            {
+                return int3(index1D % clusterDimension.x,
+                            index1D % (clusterDimension.x * clusterDimension.y) / clusterDimension.x,
+                            index1D / (clusterDimension.x * clusterDimension.y)
+                            );
+            }
         }
     }
 }

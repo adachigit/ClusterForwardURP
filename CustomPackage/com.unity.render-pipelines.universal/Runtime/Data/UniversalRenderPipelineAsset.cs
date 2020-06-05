@@ -350,6 +350,7 @@ namespace UnityEngine.Rendering.Universal
                 return null;
             }
 
+            DestroyRenderers();
             CreateRenderers();
             return new UniversalRenderPipeline(this);
         }
@@ -358,6 +359,8 @@ namespace UnityEngine.Rendering.Universal
         {
             foreach (var renderer in m_Renderers)
                 renderer?.Dispose();
+
+            m_Renderers = new ScriptableRenderer[1];
         }
 
         protected override void OnValidate()
@@ -460,12 +463,18 @@ namespace UnityEngine.Rendering.Universal
 
             // RendererData list differs from RendererList. Create RendererList.
             if (m_Renderers == null || m_Renderers.Length < m_RendererDataList.Length)
+            {
+                DestroyRenderers();
                 CreateRenderers();
+            }
 
             // This renderer data is outdated or invalid, we recreate the renderer
             // so we construct all render passes with the updated data
             if (m_RendererDataList[index].isInvalidated || m_Renderers[index] == null)
+            {
+                m_Renderers[index]?.Dispose();
                 m_Renderers[index] = m_RendererDataList[index].InternalCreateRenderer();
+            }
 
             return m_Renderers[index];
         }

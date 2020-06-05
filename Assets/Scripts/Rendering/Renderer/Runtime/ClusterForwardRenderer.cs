@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using Unity.Collections;
+using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.Rendering.Universal.Internal;
@@ -25,10 +27,11 @@ namespace Rendering.RenderPipeline
 
         private ClusterForwardRendererData m_RendererData;
 
-        private Cluster m_Cluster;
+        private Dictionary<Camera, Cluster> m_CameraToClusterDic;
         
         public ClusterForwardRenderer(ClusterForwardRendererData data) : base(data)
         {
+            m_RendererData = data;
             //设置默认的模版操作
             StencilStateData stencilData = data.defaultStencilState;
             m_DefaultStencilState = StencilState.defaultValue;
@@ -53,13 +56,14 @@ namespace Rendering.RenderPipeline
             {
                 cameraStacking = true,
             };
-            
-            m_Cluster = new Cluster(data);
+
+            m_CameraToClusterDic = new Dictionary<Camera, Cluster>();
         }
 
         public override void Setup(ScriptableRenderContext context, ref RenderingData renderingData)
         {
-            if (!m_Cluster.Setup(ref renderingData))
+            Cluster cluster = GetCluster(renderingData.cameraData.camera);
+            if (!cluster.Setup(ref renderingData))
                 return;
             
             //画不透明物体
@@ -74,7 +78,31 @@ namespace Rendering.RenderPipeline
         {
             base.Dispose(disposing);
             
-            m_Cluster.Dispose();
+            DestroyClusters();
+        }
+
+        private Cluster GetCluster(Camera camera)
+        {
+            Cluster cluster;
+            
+            if (m_CameraToClusterDic.TryGetValue(camera, out cluster))
+            {
+                return cluster;
+            }
+            
+            cluster = new Cluster(m_RendererData);
+            m_CameraToClusterDic.Add(camera, cluster);
+
+            return cluster;
+        }
+
+        private void DestroyClusters()
+        {
+            foreach (var cluster in m_CameraToClusterDic.Values)
+            {
+                cluster.Dispose();
+            }
+            m_CameraToClusterDic.Clear();
         }
     }
 }

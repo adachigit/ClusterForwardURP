@@ -1,0 +1,64 @@
+using Unity.Mathematics;
+
+namespace Utils
+{
+    public partial class Collision
+    {
+        public class Detection
+        {
+            /// <summary>
+            /// 点是否在平面负半空间。平面法线指向的半空间为平面正半空间
+            /// </summary>
+            /// <param name="point">点</param>
+            /// <param name="plane">平面</param>
+            /// <returns>点在平面负半空间返回true，否则返回false</returns>
+            public static bool PointBehindPlane(ref float3 point, ref Collider.Plane plane)
+            {
+                return math.dot(plane.normal, point) - plane.distance < 0;
+            }
+
+            /// <summary>
+            /// 球体是否在平面负半空间。平面法线指向的半空间为平面正半空间
+            /// </summary>
+            /// <param name="sphere">球体</param>
+            /// <param name="plane">平面</param>
+            /// <returns>球体在平面负半空间返回true，否则返回false</returns>
+            public static bool SphereBehindPlane(ref Collider.Sphere sphere, ref Collider.Plane plane)
+            {
+                return math.dot(plane.normal, sphere.center) - plane.distance < -sphere.radius;
+            }
+
+            /// <summary>
+            /// 球体是否与平面相交
+            /// </summary>
+            /// <param name="sphere">球体</param>
+            /// <param name="plane">平面</param>
+            /// <returns>球体与平面相交返回true，否则返回false</returns>
+            public static bool SphereIntersectPlane(ref Collider.Sphere sphere, ref Collider.Plane plane)
+            {
+                return math.abs(math.dot(plane.normal, sphere.center) - plane.distance) < sphere.radius;
+            }
+
+            public static bool SphereIntersectAABB(ref Collider.Sphere sphere, ref Collider.AABB aabb)
+            {
+                float sqrDist = Evaluation.SqrDistancePointToAABB(ref sphere.center, ref aabb);
+
+                return sqrDist <= sphere.radius * sphere.radius;
+            }
+            
+            public static bool ConeBehindPlane(ref Collider.Cone cone, ref Collider.Plane plane)
+            {
+                float3 pos = cone.pos;
+                float3 m = math.cross(math.cross(plane.normal, cone.direction), cone.direction);
+                float3 Q = cone.pos + cone.direction * cone.height + m * cone.radius;
+
+                return PointBehindPlane(ref pos, ref plane) && PointBehindPlane(ref Q, ref plane);
+            }
+
+            public static bool SegmentIntersectPlane(ref float3 startPoint, ref float3 endPoint, ref Collider.Plane plane)
+            {
+                return Evaluation.IntersectionOfSegmentWithPlane(ref startPoint, ref endPoint, ref plane, out var intersection);
+            }
+        }
+    }
+}
