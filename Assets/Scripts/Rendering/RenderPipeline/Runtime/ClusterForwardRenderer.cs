@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using Rendering.RenderPipeline.Passes;
 using Unity.Collections;
+using Unity.Jobs;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
@@ -9,8 +11,7 @@ namespace Rendering.RenderPipeline
 {
     public class ClusterForwardRenderer : ScriptableRenderer
     {
-        private NativeArray<DataType.AABB> m_ClusterAABBs;
-        private NativeArray<DataType.Sphere> m_ClusterSpheres;
+        LightsCullingFrameBeginPass m_LightsCullingBeginPass;
         
         DrawObjectsPass m_RenderOpaqueForwardPass;
         DrawSkyboxPass m_DrawSkyboxPass;
@@ -28,6 +29,9 @@ namespace Rendering.RenderPipeline
         private ClusterForwardRendererData m_RendererData;
 
         private Dictionary<Camera, Cluster> m_CameraToClusterDic;
+        private Dictionary<Camera, ClusterForwardLights> m_CameraToLightsDic;
+
+        public ClusterForwardRendererData rendererData => m_RendererData;
         
         public ClusterForwardRenderer(ClusterForwardRendererData data) : base(data)
         {
@@ -42,6 +46,8 @@ namespace Rendering.RenderPipeline
             m_DefaultStencilState.SetZFailOperation(stencilData.zFailOperation);
             
             //生成各个Pass
+            m_LightsCullingBeginPass = new LightsCullingFrameBeginPass(this, RenderPassEvent.BeforeRendering);
+            
             m_RenderOpaqueForwardPass = new DrawObjectsPass("Render Opaques", true, RenderPassEvent.BeforeRenderingOpaques, RenderQueueRange.opaque, data.opaqueLayerMask, m_DefaultStencilState, stencilData.stencilReference);
             m_RenderTransparentForwardPass = new DrawObjectsPass("Render Transparents", false, RenderPassEvent.BeforeRenderingTransparents, RenderQueueRange.transparent, data.transparentLayerMask, m_DefaultStencilState, stencilData.stencilReference);
             m_DrawSkyboxPass = new DrawSkyboxPass(RenderPassEvent.BeforeRenderingSkybox);
@@ -58,6 +64,7 @@ namespace Rendering.RenderPipeline
             };
 
             m_CameraToClusterDic = new Dictionary<Camera, Cluster>();
+            m_CameraToLightsDic = new Dictionary<Camera, ClusterForwardLights>();
         }
 
         public override void Setup(ScriptableRenderContext context, ref RenderingData renderingData)
@@ -65,6 +72,8 @@ namespace Rendering.RenderPipeline
             Cluster cluster = GetCluster(renderingData.cameraData.camera);
             if (!cluster.Setup(ref renderingData))
                 return;
+            
+            EnqueuePass(m_LightsCullingBeginPass);
             
             //画不透明物体
             EnqueuePass(m_RenderOpaqueForwardPass);
@@ -78,10 +87,13 @@ namespace Rendering.RenderPipeline
         {
             base.Dispose(disposing);
             
+            LightsCulling.Dispose();
+            
             DestroyClusters();
+            DestroyLights();
         }
 
-        private Cluster GetCluster(Camera camera)
+        public Cluster GetCluster(Camera camera)
         {
             Cluster cluster;
             
@@ -90,10 +102,25 @@ namespace Rendering.RenderPipeline
                 return cluster;
             }
             
-            cluster = new Cluster(m_RendererData);
+            cluster = new Cluster(this);
             m_CameraToClusterDic.Add(camera, cluster);
 
             return cluster;
+        }
+
+        public ClusterForwardLights GetLights(Camera camera)
+        {
+            ClusterForwardLights lights;
+
+            if (m_CameraToLightsDic.TryGetValue(camera, out lights))
+            {
+                return lights;
+            }
+            
+            lights = new ClusterForwardLights(this);
+            m_CameraToLightsDic.Add(camera, lights);
+
+            return lights;
         }
 
         private void DestroyClusters()
@@ -103,6 +130,15 @@ namespace Rendering.RenderPipeline
                 cluster.Dispose();
             }
             m_CameraToClusterDic.Clear();
+        }
+
+        private void DestroyLights()
+        {
+            foreach (var lights in m_CameraToLightsDic.Values)
+            {
+                lights.Dispose();
+            }
+            m_CameraToLightsDic.Clear();
         }
     }
 }

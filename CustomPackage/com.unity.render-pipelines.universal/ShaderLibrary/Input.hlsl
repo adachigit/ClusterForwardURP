@@ -2,7 +2,7 @@
 #define UNIVERSAL_INPUT_INCLUDED
 
 #define MAX_VISIBLE_LIGHTS_SSBO 256
-#define MAX_VISIBLE_LIGHTS_UBO  32
+#define MAX_VISIBLE_LIGHTS_UBO  256
 
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ShaderTypes.cs.hlsl"
 

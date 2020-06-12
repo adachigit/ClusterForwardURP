@@ -36,6 +36,9 @@ namespace Rendering.RenderPipeline
         [SerializeField] int m_ClusterZCount;
 
         [SerializeField] bool m_ZPriority;
+
+        [SerializeField] private int m_LightsCountPerCluster;
+        [SerializeField] private bool m_LightsSorting;
         
         protected override ScriptableRenderer Create()
         {
@@ -65,6 +68,16 @@ namespace Rendering.RenderPipeline
         public bool zPriority
         {
             get => m_ZPriority;
+        }
+
+        public int lightsCountPerCluster
+        {
+            get => m_LightsCountPerCluster;
+        }
+
+        public bool lightsSorting
+        {
+            get => m_LightsSorting;
         }
     }
 }

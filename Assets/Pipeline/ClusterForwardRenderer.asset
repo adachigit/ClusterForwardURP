@@ -40,3 +40,6 @@ MonoBehaviour:
   m_ClusterGridSizeX: 48
   m_ClusterGridSizeY: 48
   m_ClusterZCount: 16
+  m_ZPriority: 0
+  m_LightsCountPerCluster: 8
+  m_LightsSorting: 1

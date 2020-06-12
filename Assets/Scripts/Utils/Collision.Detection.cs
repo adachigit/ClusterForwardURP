@@ -39,6 +39,12 @@ namespace Utils
                 return math.abs(math.dot(plane.normal, sphere.center) - plane.distance) < sphere.radius;
             }
 
+            /// <summary>
+            /// 球体与AABB是否相交
+            /// </summary>
+            /// <param name="sphere">球体</param>
+            /// <param name="aabb">AABB</param>
+            /// <returns>相交返回true，否则返回false</returns>
             public static bool SphereIntersectAABB(ref Collider.Sphere sphere, ref Collider.AABB aabb)
             {
                 float sqrDist = Evaluation.SqrDistancePointToAABB(ref sphere.center, ref aabb);
@@ -46,6 +52,12 @@ namespace Utils
                 return sqrDist <= sphere.radius * sphere.radius;
             }
             
+            /// <summary>
+            /// 锥体是否在平面的负半空间。平面法线指向的空间为平面的正半空间
+            /// </summary>
+            /// <param name="cone">锥体</param>
+            /// <param name="plane">平面</param>
+            /// <returns>锥体在平面负半空间返回true，否则返回false</returns>
             public static bool ConeBehindPlane(ref Collider.Cone cone, ref Collider.Plane plane)
             {
                 float3 pos = cone.pos;
@@ -55,6 +67,13 @@ namespace Utils
                 return PointBehindPlane(ref pos, ref plane) && PointBehindPlane(ref Q, ref plane);
             }
 
+            /// <summary>
+            /// 线段是否与平面相交
+            /// </summary>
+            /// <param name="startPoint">线段起点坐标</param>
+            /// <param name="endPoint">线段终点坐标</param>
+            /// <param name="plane"></param>
+            /// <returns>相交返回true，否则返回false</returns>
             public static bool SegmentIntersectPlane(ref float3 startPoint, ref float3 endPoint, ref Collider.Plane plane)
             {
                 return Evaluation.IntersectionOfSegmentWithPlane(ref startPoint, ref endPoint, ref plane, out var intersection);
