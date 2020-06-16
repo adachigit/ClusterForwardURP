@@ -69,11 +69,14 @@ namespace Rendering.RenderPipeline
 
         public override void Setup(ScriptableRenderContext context, ref RenderingData renderingData)
         {
+            //
+            LightsCulling.Finish(context, ref renderingData);
+            
             Cluster cluster = GetCluster(renderingData.cameraData.camera);
             if (!cluster.Setup(ref renderingData))
                 return;
-            
-            EnqueuePass(m_LightsCullingBeginPass);
+            ClusterForwardLights lights = GetLights(renderingData.cameraData.camera);
+            lights.Setup(context, ref renderingData);
             
             //画不透明物体
             EnqueuePass(m_RenderOpaqueForwardPass);
@@ -81,6 +84,8 @@ namespace Rendering.RenderPipeline
             EnqueuePass(m_DrawSkyboxPass);
             //画透明物体
             EnqueuePass(m_RenderTransparentForwardPass);
+
+            LightsCulling.Start(context, ref renderingData, lights, cluster);
         }
 
         protected override void Dispose(bool disposing)
