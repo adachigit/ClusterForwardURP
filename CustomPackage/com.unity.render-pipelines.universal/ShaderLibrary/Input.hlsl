@@ -60,6 +60,13 @@ half4 _AdditionalLightsSpotDir[MAX_VISIBLE_LIGHTS];
 half4 _AdditionalLightsOcclusionProbes[MAX_VISIBLE_LIGHTS];
 #endif
 
+CBUFFER_START(_ClusterLightsCountBuffer)
+    half4 _ClusterLightsCount[4096];
+CBUFFER_END
+CBUFFER_START(_ClusterLightIndicesBuffer)
+    float4 _ClusterLightIndices[4096];
+CBUFFER_END
+
 #define UNITY_MATRIX_M     unity_ObjectToWorld
 #define UNITY_MATRIX_I_M   unity_WorldToObject
 #define UNITY_MATRIX_V     unity_MatrixV

@@ -26,7 +26,7 @@ namespace Rendering.RenderPipeline.Jobs
         public float zLogFactor;
         public bool isClusterZPrior;
 
-        public NativeMultiHashMap<int, int> clusterLightIndexes;
+        public NativeMultiHashMap<int, int> clusterLightIndices;
         public NativeArray<int> clusterLightsCount;
 
         public float4x4 worldToViewMat;
@@ -66,7 +66,7 @@ namespace Rendering.RenderPipeline.Jobs
             for (int i = 0; i < totalClustersCount; ++i)
             {
                 clusterLightsCount[i] = clusterLightsCount[i] + 1;
-                clusterLightIndexes.Add(i, lightIndex);
+                clusterLightIndices.Add(i, lightIndex);
             }
         }
 
@@ -88,8 +88,11 @@ namespace Rendering.RenderPipeline.Jobs
 
             // 点光源中心所在的cluster肯定被光源覆盖
             int centerIndex1D = Cluster.GetClusterIndex1D(centerIndex3D, clusterCount, isClusterZPrior);
-            clusterLightsCount[centerIndex1D] = clusterLightsCount[centerIndex1D] + 1;
-            clusterLightIndexes.Add(centerIndex1D, lightIndex);
+            if (Cluster.IsValidIndex1D(centerIndex1D, clusterCount, isClusterZPrior))
+            {
+                clusterLightsCount[centerIndex1D] = clusterLightsCount[centerIndex1D] + 1;
+                clusterLightIndices.Add(centerIndex1D, lightIndex);
+            }
             
             float2 minScreen = RenderingHelper.ViewToScreen(viewPos - float4(sphere.radius, sphere.radius, 0.0f, 0.0f), screenDimension, ref projectionMat);
             float2 maxScreen = RenderingHelper.ViewToScreen(viewPos + float4(sphere.radius, sphere.radius, 0.0f, 0.0f), screenDimension, ref projectionMat);
@@ -111,6 +114,8 @@ namespace Rendering.RenderPipeline.Jobs
                     for (int x = minIndexXY.x; x <= maxIndexXY.x; ++x)
                     {
                         int3 index3D = int3(x, y, z);
+                        if (!Cluster.IsValidIndex3D(index3D, clusterCount))
+                            continue;
                         int index1D = Cluster.GetClusterIndex1D(index3D, clusterCount, isClusterZPrior);
                         //跳过点光源中心点所在的cluster
                         if (index1D == centerIndex1D) continue;
@@ -119,7 +124,7 @@ namespace Rendering.RenderPipeline.Jobs
                         if (Collision.Detection.SphereIntersectAABB(ref sphere, ref clusterAABB))
                         {
                             clusterLightsCount[index1D] = clusterLightsCount[index1D] + 1;
-                            clusterLightIndexes.Add(index1D, lightIndex);
+                            clusterLightIndices.Add(index1D, lightIndex);
                         }
                     }
                 }

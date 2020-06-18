@@ -11,8 +11,6 @@ namespace Rendering.RenderPipeline
 {
     public class ClusterForwardRenderer : ScriptableRenderer
     {
-        LightsCullingFrameBeginPass m_LightsCullingBeginPass;
-        
         DrawObjectsPass m_RenderOpaqueForwardPass;
         DrawSkyboxPass m_DrawSkyboxPass;
         DrawObjectsPass m_RenderTransparentForwardPass;
@@ -46,8 +44,6 @@ namespace Rendering.RenderPipeline
             m_DefaultStencilState.SetZFailOperation(stencilData.zFailOperation);
             
             //生成各个Pass
-            m_LightsCullingBeginPass = new LightsCullingFrameBeginPass(this, RenderPassEvent.BeforeRendering);
-            
             m_RenderOpaqueForwardPass = new DrawObjectsPass("Render Opaques", true, RenderPassEvent.BeforeRenderingOpaques, RenderQueueRange.opaque, data.opaqueLayerMask, m_DefaultStencilState, stencilData.stencilReference);
             m_RenderTransparentForwardPass = new DrawObjectsPass("Render Transparents", false, RenderPassEvent.BeforeRenderingTransparents, RenderQueueRange.transparent, data.transparentLayerMask, m_DefaultStencilState, stencilData.stencilReference);
             m_DrawSkyboxPass = new DrawSkyboxPass(RenderPassEvent.BeforeRenderingSkybox);
@@ -69,13 +65,13 @@ namespace Rendering.RenderPipeline
 
         public override void Setup(ScriptableRenderContext context, ref RenderingData renderingData)
         {
-            //
-            LightsCulling.Finish(context, ref renderingData);
-            
             Cluster cluster = GetCluster(renderingData.cameraData.camera);
+            ClusterForwardLights lights = GetLights(renderingData.cameraData.camera);
+            
+            LightsCulling.Start(context, ref renderingData, lights, cluster);
+            
             if (!cluster.Setup(ref renderingData))
                 return;
-            ClusterForwardLights lights = GetLights(renderingData.cameraData.camera);
             lights.Setup(context, ref renderingData);
             
             //画不透明物体
@@ -85,7 +81,7 @@ namespace Rendering.RenderPipeline
             //画透明物体
             EnqueuePass(m_RenderTransparentForwardPass);
 
-            LightsCulling.Start(context, ref renderingData, lights, cluster);
+            LightsCulling.Finish(context, ref renderingData, lights, cluster);
         }
 
         protected override void Dispose(bool disposing)

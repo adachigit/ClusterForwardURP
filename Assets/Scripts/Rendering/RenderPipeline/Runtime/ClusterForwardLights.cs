@@ -261,7 +261,6 @@ namespace Rendering.RenderPipeline
         
         public void Dispose()
         {
-            LightsCulling.Dispose();
             if(m_AdditionalLights.IsCreated) m_AdditionalLights.Dispose();
         }
     }

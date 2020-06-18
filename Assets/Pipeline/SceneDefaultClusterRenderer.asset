@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ce86a8d2509d948ac9f578fb9d38b44b, type: 3}
-  m_Name: ClusterForwardRenderer
+  m_Name: SceneDefaultClusterRenderer
   m_EditorClassIdentifier: 
   m_RendererFeatures: []
   m_RendererFeatureMap: 
@@ -37,8 +37,8 @@ MonoBehaviour:
     zFailOperation: 0
   m_ShadowTransparentReceive: 1
   m_MaxClusterZFar: 100
-  m_ClusterGridSizeX: 48
-  m_ClusterGridSizeY: 48
+  m_ClusterGridSizeX: 80
+  m_ClusterGridSizeY: 80
   m_ClusterZCount: 16
   m_ZPriority: 0
   m_LightsCountPerCluster: 8

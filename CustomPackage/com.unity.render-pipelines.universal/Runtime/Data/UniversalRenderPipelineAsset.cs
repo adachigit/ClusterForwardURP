@@ -436,6 +436,7 @@ namespace UnityEngine.Rendering.Universal
 
                 if (scriptableRendererData.isInvalidated || m_Renderers[m_DefaultRendererIndex] == null)
                 {
+                    m_Renderers[m_DefaultRendererIndex]?.Dispose();
                     m_Renderers[m_DefaultRendererIndex] = scriptableRendererData.InternalCreateRenderer();
                 }
 

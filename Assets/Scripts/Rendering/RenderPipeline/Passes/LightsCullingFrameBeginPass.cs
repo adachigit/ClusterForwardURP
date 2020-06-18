@@ -19,7 +19,7 @@ namespace Rendering.RenderPipeline.Passes
         {
             Camera camera = renderingData.cameraData.camera;
 
-            LightsCulling.Finish(context, ref renderingData);
+//            LightsCulling.Finish(context, ref renderingData);
             
             ClusterForwardLights clusterLights = m_Renderer.GetLights(camera);
             clusterLights.ApplyConstantBuffer(context);

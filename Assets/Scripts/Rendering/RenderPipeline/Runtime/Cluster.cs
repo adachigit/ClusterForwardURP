@@ -59,9 +59,9 @@ namespace Rendering.RenderPipeline
         {
             get 
             {
-                if (m_UseStructuredBuffer)
-                    return k_MaxClustersCountSSBO;
-                else
+//                if (m_UseStructuredBuffer)
+//                    return k_MaxClustersCountSSBO;
+//                else
                     return k_MaxClustersCountUBO;
             }
         }
@@ -81,7 +81,7 @@ namespace Rendering.RenderPipeline
         public bool Setup(ref RenderingData renderingData)
         {
             var camera = renderingData.cameraData.camera;
-            m_UseStructuredBuffer = RenderingUtility.CheckUseStructuredBuffer(ref renderingData);
+//            m_UseStructuredBuffer = RenderingUtility.CheckUseStructuredBuffer(ref renderingData);
 
             if (camera != m_Camera || camera.pixelWidth != m_ScreenWidth || camera.pixelHeight != m_ScreenHeight)
             {
@@ -243,8 +243,6 @@ namespace Rendering.RenderPipeline
         
         private void ReleaseClusterNativeArray()
         {
-            LightsCulling.Dispose();
-            
             if (m_ClusterAABBs.IsCreated)
             {
                 m_ClusterAABBs.Dispose();
@@ -310,6 +308,20 @@ namespace Rendering.RenderPipeline
         public static int GetClusterZIndex(float viewZ, float clusterZFar, int clusterCountZ, float logFactor)
         {
             return (int)(log2(-viewZ / clusterZFar) / logFactor + clusterCountZ);
+        }
+
+        public static bool IsValidIndex3D(int3 index3D, int3 clustersCount)
+        {
+            return (index3D.x >= 0 && index3D.x < clustersCount.x) &&
+                   (index3D.y >= 0 && index3D.y < clustersCount.y) &&
+                   (index3D.z >= 0 && index3D.z < clustersCount.z);
+        }
+
+        public static bool IsValidIndex1D(int index1D, int3 clustersCount, bool zPrior)
+        {
+            int3 index3D = GetClusterIndex3D(index1D, clustersCount, zPrior);
+
+            return IsValidIndex3D(index3D, clustersCount);
         }
     }
 }
