@@ -8,7 +8,7 @@ namespace Rendering.RenderPipeline.Jobs
     [BurstCompile(CompileSynchronously = true)]
     public struct GenerateLightsBufferJob : IJob
     {
-        public NativeArray<half4> lightsCountBuffer;
+        public NativeArray<float4> lightsCountBuffer;
         public NativeArray<float4> lightIndicesBuffer;
 
         public int clustersCount;
@@ -21,10 +21,10 @@ namespace Rendering.RenderPipeline.Jobs
             half indexStartOffset = (half)0;
             for (int i = 0; i < clusterLightsCount.Length && i < clustersCount; ++i)
             {
-                int index = i >> 1;    // index = i / 2
-                half4 entry = lightsCountBuffer[index];
-                entry[(index & 0x1) << 1] = indexStartOffset;    // index % 2 * 2
-                entry[((index & 0x1) << 1) + 1] = (half)clusterLightsCount[i];    // index % 2 * 2 + 1
+                int index = i / 2;    // index = i / 2
+                float4 entry = lightsCountBuffer[index];
+                entry[i % 2 * 2] = indexStartOffset;    // index % 2 * 2
+                entry[i % 2 * 2 + 1] = (half)clusterLightsCount[i];    // index % 2 * 2 + 1
                 lightsCountBuffer[index] = entry;
 
                 indexStartOffset += (half)clusterLightsCount[i];

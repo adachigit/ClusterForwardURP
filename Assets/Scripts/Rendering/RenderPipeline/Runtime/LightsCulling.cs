@@ -16,6 +16,13 @@ namespace Rendering.RenderPipeline
             public static int _ClusterLightsCountBuffer = Shader.PropertyToID("_ClusterLightsCountBuffer");
             public static int _ClusterLightIndicesBuffer = Shader.PropertyToID("_ClusterLightIndicesBuffer");
         }
+
+        static class ClusterInputUniform
+        {
+            public static int _ClusterParams = Shader.PropertyToID("_ClusterParams");
+            public static int _ClusterCountParams = Shader.PropertyToID("_ClusterCountParams");
+            public static int _ClusterSizeParams = Shader.PropertyToID("_ClusterSizeParams");
+        }
         
         private const string k_SetupClusterCullingConstants = "Setup Cluster Culling Constants";
         
@@ -23,7 +30,7 @@ namespace Rendering.RenderPipeline
         private static Dictionary<Camera, NativeMultiHashMap<int, int>> m_CameraToLightIndicesContainer = new Dictionary<Camera, NativeMultiHashMap<int, int>>();
         private static Dictionary<Camera, NativeArray<int>> m_CameraToLightsCountContainer = new Dictionary<Camera, NativeArray<int>>();
 
-        private static Dictionary<Camera, NativeArray<half4>> m_CameraToLightsCountCBContainer = new Dictionary<Camera, NativeArray<half4>>();
+        private static Dictionary<Camera, NativeArray<float4>> m_CameraToLightsCountCBContainer = new Dictionary<Camera, NativeArray<float4>>();
         private static Dictionary<Camera, NativeArray<float4>> m_CameraToLightIndicesCBContainer = new Dictionary<Camera, NativeArray<float4>>();
         
         private static Dictionary<Camera, ComputeBuffer> m_CameraToLightsCountCBuffer = new Dictionary<Camera, ComputeBuffer>();
@@ -37,7 +44,7 @@ namespace Rendering.RenderPipeline
             jobHandle.Complete();
             
             lights.ApplyConstantBuffer(context);
-            ApplyConstantBuffer(context, ref renderingData);
+            ApplyConstantBuffer(context, ref renderingData, lights, cluster);
         }
 
         public static void Finish(ScriptableRenderContext context, ref RenderingData renderingData, ClusterForwardLights lights, Cluster cluster)
@@ -80,7 +87,7 @@ namespace Rendering.RenderPipeline
             SetJobHandle(camera, generateJobHandle);
         }
 
-        public static void ApplyConstantBuffer(ScriptableRenderContext context, ref RenderingData renderingData)
+        private static void ApplyConstantBuffer(ScriptableRenderContext context, ref RenderingData renderingData, ClusterForwardLights lights, Cluster cluster)
         {
             CommandBuffer cmd = CommandBufferPool.Get(k_SetupClusterCullingConstants);
 
@@ -92,6 +99,10 @@ namespace Rendering.RenderPipeline
             cbuffer.SetData(GetLightIndicesCBContainer(renderingData.cameraData.camera));
             cmd.SetGlobalConstantBuffer(cbuffer, LightsCullingConstantBuffer._ClusterLightIndicesBuffer, 0, Constant.ConstantBuffer_LightIndices_Size);
 
+            cmd.SetGlobalVector(ClusterInputUniform._ClusterParams, new Vector4(1.0f / cluster.zLogFactor, 1.0f / cluster.clusterZFar, cluster.rendererData.zPriority ? 1.0f : -1.0f, 0.0f));
+            cmd.SetGlobalVector(ClusterInputUniform._ClusterCountParams, new Vector4(cluster.clusterCount.x, cluster.clusterCount.y, cluster.clusterCount.z, cluster.clusterCount.x * cluster.clusterCount.y * cluster.clusterCount.z));
+            cmd.SetGlobalVector(ClusterInputUniform._ClusterSizeParams, new Vector4(cluster.clusterSize.x, cluster.clusterSize.y, 1.0f / cluster.clusterSize.x, 1.0f / cluster.clusterSize.y));
+            
             context.ExecuteCommandBuffer(cmd);
             CommandBufferPool.Release(cmd);
         }
@@ -126,16 +137,16 @@ namespace Rendering.RenderPipeline
             return container;
         }
 
-        private static NativeArray<half4> GetLightsCountCBContainer(Camera camera)
+        private static NativeArray<float4> GetLightsCountCBContainer(Camera camera)
         {
-            NativeArray<half4> container;
+            NativeArray<float4> container;
 
             if (m_CameraToLightsCountCBContainer.TryGetValue(camera, out container))
             {
                 return container;
             }
 
-            container = new NativeArray<half4>(Constant.ConstantBuffer_Max_EntryCount, Allocator.Persistent);
+            container = new NativeArray<float4>(Constant.ConstantBuffer_Max_EntryCount, Allocator.Persistent);
             m_CameraToLightsCountCBContainer.Add(camera, container);
 
             return container;
@@ -165,7 +176,7 @@ namespace Rendering.RenderPipeline
                 return cbuffer;
             }
 
-            cbuffer = new ComputeBuffer(Constant.ConstantBuffer_Max_EntryCount, sizeof(half4), ComputeBufferType.Constant);
+            cbuffer = new ComputeBuffer(Constant.ConstantBuffer_Max_EntryCount, sizeof(float4), ComputeBufferType.Constant);
             m_CameraToLightsCountCBuffer.Add(camera, cbuffer);
 
             return cbuffer;

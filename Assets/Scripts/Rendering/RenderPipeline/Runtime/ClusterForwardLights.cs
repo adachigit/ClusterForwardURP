@@ -123,15 +123,16 @@ namespace Rendering.RenderPipeline
             
             for(int i = 0; i < lightIndexArray.Length; ++i)
             {
-                if (i != renderingData.lightData.mainLightIndex)
+                int lightIndex = lightIndexArray[i];
+                if (lightIndex != renderingData.lightData.mainLightIndex)
                 {
-                    SetupLightInfos(renderingData.lightData.visibleLights, lightIndexArray[i],
+                    SetupLightInfos(renderingData.lightData.visibleLights, lightIndex,
                         out m_AdditionalLightPositions[m_AdditionalLightsCount],
                         out m_AdditionalLightColors[m_AdditionalLightsCount],
                         out m_AdditionalLightAttenuations[m_AdditionalLightsCount],
                         out m_AdditionalLightSpotDirections[m_AdditionalLightsCount]
                         );
-                    m_AdditionalLights[m_AdditionalLightsCount++] = renderingData.lightData.visibleLights[i];
+                    m_AdditionalLights[m_AdditionalLightsCount++] = renderingData.lightData.visibleLights[lightIndex];
                 }
             }
         }

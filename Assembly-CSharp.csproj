@@ -78,6 +78,11 @@
      <Compile Include="Assets\Scripts\Utils\Collision.Evaluation.cs" />
      <Compile Include="Assets\Scripts\Utils\MathUtility.cs" />
      <Compile Include="Assets\Scripts\Utils\RenderingHelper.cs" />
+     <None Include="Assets\Scripts\Rendering\RenderPipeline\ShaderLibrary\Cluster.hlsl" />
+     <None Include="Assets\Scripts\Rendering\RenderPipeline\ShaderLibrary\ClusterInput.hlsl" />
+     <None Include="Assets\Scripts\Rendering\RenderPipeline\Shaders\LitClusterFWDPass.hlsl" />
+     <None Include="Assets\Scripts\Rendering\RenderPipeline\Shaders\Lit.shader" />
+     <None Include="Assets\Scripts\Rendering\RenderPipeline\ShaderLibrary\CustomRPInput.hlsl" />
  <Reference Include="Unity.Burst">
  <HintPath>/Users/hanyi/work/project/ClusterForwardURP/Library/ScriptAssemblies/Unity.Burst.dll</HintPath>
  </Reference>

@@ -16,7 +16,7 @@ namespace Rendering.RenderPipeline
         private const int k_MaxClustersCountSSBO = 32768;
 
         private const int k_MinClusterGridSize = 16;
-        private const int k_MaxClusterZCount = 16;
+        private const int k_MaxClusterZCount = 20;
 
         private float m_MaxClusterZFar;
         private float m_CameraNearZ;
@@ -42,9 +42,6 @@ namespace Rendering.RenderPipeline
         private NativeArray<Collision.Collider.AABB> m_ClusterAABBs;
         private NativeArray<Collision.Collider.Sphere> m_ClusterSpheres;
         private NativeArray<float> m_ClusterZDistances;
-
-        private NativeMultiHashMap<int, int> m_ClusterLightIndices;
-        private NativeArray<int> m_ClusterLightCount;
 
         public ClusterForwardRendererData rendererData => m_Renderer.rendererData;
         public float clusterZFar => m_MaxClusterZFar;
@@ -174,7 +171,8 @@ namespace Rendering.RenderPipeline
             
             var gridSizeX = math.max(k_MinClusterGridSize, m_ClusterGridSizeX);
             var gridSizeY = math.max(k_MinClusterGridSize, m_ClusterGridSizeY);
-            
+
+            m_ClusterCountZ = math.max(1, m_ClusterCountZ);
             m_ClusterCountX = (screenWidth + gridSizeX - 1) / gridSizeX;
             m_ClusterCountY = (screenHeight + gridSizeY - 1) / gridSizeY;
             var clusterTotalCount = m_ClusterCountX * m_ClusterCountY * m_ClusterCountZ;
@@ -222,25 +220,6 @@ namespace Rendering.RenderPipeline
             }
         }
 
-        public void PrepareLightsCullingNativeContainers()
-        {
-            ReleaseLightsCullingNativeContainers();
-            
-            
-        }
-
-        private void ReleaseLightsCullingNativeContainers()
-        {
-            if (m_ClusterLightIndices.IsCreated)
-            {
-                m_ClusterLightIndices.Dispose();
-            }
-            if (m_ClusterLightCount.IsCreated)
-            {
-                m_ClusterLightCount.Dispose();
-            }
-        }
-        
         private void ReleaseClusterNativeArray()
         {
             if (m_ClusterAABBs.IsCreated)

@@ -42,6 +42,7 @@ struct Varyings
 
 void InitializeInputData(Varyings input, half3 normalTS, out InputData inputData)
 {
+    inputData.positionCS = input.positionCS;
     inputData.positionWS = input.posWS;
 
 #ifdef _NORMALMAP

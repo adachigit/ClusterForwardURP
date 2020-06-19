@@ -86,6 +86,8 @@ void InitializeInputData(SpeedTreeVertexOutput input, half3 normalTS, out InputD
     inputData.fogCoord = input.fogFactorAndVertexLight.x;
     inputData.vertexLighting = input.fogFactorAndVertexLight.yzw;
     inputData.bakedGI = half3(0, 0, 0); // No GI currently.
+    
+    inputData.positionCS = input.clipPos;
 }
 
 half4 SpeedTree7Frag(SpeedTreeVertexOutput input) : SV_Target
