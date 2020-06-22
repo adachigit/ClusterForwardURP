@@ -2,7 +2,7 @@
 #define UNIVERSAL_FORWARD_LIT_PASS_INCLUDED
 
 #include "../ShaderLibrary/Cluster.hlsl"
-#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+#include "../ShaderLibrary/Lighting.hlsl"
 
 struct Attributes
 {
@@ -139,16 +139,12 @@ half4 LitPassFragment(Varyings input) : SV_Target
     InputData inputData;
     InitializeInputData(input, surfaceData.normalTS, inputData);
 
-    half4 color = UniversalFragmentPBR(inputData, surfaceData.albedo, surfaceData.metallic, surfaceData.specular, surfaceData.smoothness, surfaceData.occlusion, surfaceData.emission, surfaceData.alpha);
+    half4 color = ClusterFragmentPBR(inputData, surfaceData.albedo, surfaceData.metallic, surfaceData.specular, surfaceData.smoothness, surfaceData.occlusion, surfaceData.emission, surfaceData.alpha);
 
     color.rgb = MixFog(color.rgb, inputData.fogCoord);
     
-    int3 clusterIndex3D = GetClusterIndex3D(inputData.positionWS, float2(inputData.positionCS.x, inputData.positionCS.y));
-    int clusterIndex1D = GetClusterIndex1D(clusterIndex3D);
-    float startIndex, count;
-    GetClusterLightStartIndexAndCount(clusterIndex1D, startIndex, count);
-    
-    return float(count) / 4.0;//float4(clusterIndex3D, 1) / float4(_ClusterCountParams);//float4(float3(clusterIndex3D.z, clusterIndex3D.z, clusterIndex3D.z) / float3(_ClusterCountParams.z, _ClusterCountParams.z, _ClusterCountParams.z), 1.0);//color * startIndex;// * float4(clusterIndex3D, 1.0f);
+    return color;
+//    return (float(count) / 8.0);//float4(clusterIndex3D, 1) / float4(_ClusterCountParams);//float4(float3(clusterIndex3D.z, clusterIndex3D.z, clusterIndex3D.z) / float3(_ClusterCountParams.z, _ClusterCountParams.z, _ClusterCountParams.z), 1.0);//color * startIndex;// * float4(clusterIndex3D, 1.0f);
 }
 
 #endif

@@ -87,11 +87,15 @@ namespace Rendering.RenderPipeline.Jobs
                 Cluster.GetClusterZIndex(viewPos.z, clusterZFar, clusterCount.z, zLogFactor));
 
             // 点光源中心所在的cluster肯定被光源覆盖
-            int centerIndex1D = Cluster.GetClusterIndex1D(centerIndex3D, clusterCount, isClusterZPrior);
-            if (Cluster.IsValidIndex1D(centerIndex1D, clusterCount, isClusterZPrior))
+            int centerIndex1D = -1;
+            if (Cluster.IsValidIndex3D(centerIndex3D, clusterCount))
             {
-                clusterLightsCount[centerIndex1D] = clusterLightsCount[centerIndex1D] + 1;
-                clusterLightIndices.Add(centerIndex1D, lightIndex);
+                centerIndex1D = Cluster.GetClusterIndex1D(centerIndex3D, clusterCount, isClusterZPrior);
+                if (Cluster.IsValidIndex1D(centerIndex1D, clusterCount, isClusterZPrior))
+                {
+                    clusterLightsCount[centerIndex1D] = clusterLightsCount[centerIndex1D] + 1;
+                    clusterLightIndices.Add(centerIndex1D, lightIndex);
+                }
             }
             
             float2 minScreen = RenderingHelper.ViewToScreen(viewPos - float4(sphere.radius, sphere.radius, 0.0f, 0.0f), screenDimension, ref projectionMat);

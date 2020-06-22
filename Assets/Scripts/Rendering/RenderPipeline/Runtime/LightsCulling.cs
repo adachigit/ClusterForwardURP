@@ -30,8 +30,8 @@ namespace Rendering.RenderPipeline
         private static Dictionary<Camera, NativeMultiHashMap<int, int>> m_CameraToLightIndicesContainer = new Dictionary<Camera, NativeMultiHashMap<int, int>>();
         private static Dictionary<Camera, NativeArray<int>> m_CameraToLightsCountContainer = new Dictionary<Camera, NativeArray<int>>();
 
-        private static Dictionary<Camera, NativeArray<float4>> m_CameraToLightsCountCBContainer = new Dictionary<Camera, NativeArray<float4>>();
-        private static Dictionary<Camera, NativeArray<float4>> m_CameraToLightIndicesCBContainer = new Dictionary<Camera, NativeArray<float4>>();
+        private static Dictionary<Camera, NativeArray<int4>> m_CameraToLightsCountCBContainer = new Dictionary<Camera, NativeArray<int4>>();
+        private static Dictionary<Camera, NativeArray<int4>> m_CameraToLightIndicesCBContainer = new Dictionary<Camera, NativeArray<int4>>();
         
         private static Dictionary<Camera, ComputeBuffer> m_CameraToLightsCountCBuffer = new Dictionary<Camera, ComputeBuffer>();
         private static Dictionary<Camera, ComputeBuffer> m_CameraToLightIndicesCBuffer = new Dictionary<Camera, ComputeBuffer>();
@@ -137,31 +137,31 @@ namespace Rendering.RenderPipeline
             return container;
         }
 
-        private static NativeArray<float4> GetLightsCountCBContainer(Camera camera)
+        private static NativeArray<int4> GetLightsCountCBContainer(Camera camera)
         {
-            NativeArray<float4> container;
+            NativeArray<int4> container;
 
             if (m_CameraToLightsCountCBContainer.TryGetValue(camera, out container))
             {
                 return container;
             }
 
-            container = new NativeArray<float4>(Constant.ConstantBuffer_Max_EntryCount, Allocator.Persistent);
+            container = new NativeArray<int4>(Constant.ConstantBuffer_Max_EntryCount, Allocator.Persistent);
             m_CameraToLightsCountCBContainer.Add(camera, container);
 
             return container;
         }
 
-        private static NativeArray<float4> GetLightIndicesCBContainer(Camera camera)
+        private static NativeArray<int4> GetLightIndicesCBContainer(Camera camera)
         {
-            NativeArray<float4> container;
+            NativeArray<int4> container;
 
             if (m_CameraToLightIndicesCBContainer.TryGetValue(camera, out container))
             {
                 return container;
             }
 
-            container = new NativeArray<float4>(Constant.ConstantBuffer_Max_EntryCount, Allocator.Persistent);
+            container = new NativeArray<int4>(Constant.ConstantBuffer_Max_EntryCount, Allocator.Persistent);
             m_CameraToLightIndicesCBContainer.Add(camera, container);
 
             return container;

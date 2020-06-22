@@ -39,13 +39,25 @@ int GetClusterIndex1D(int3 index3D)
     }
 }
 
-void GetClusterLightStartIndexAndCount(int index1D, out float startIndex, out float count)
+void GetClusterLightStartIndexAndCount(int clusterIndex1D, out int startIndex, out int count)
 {
-    int entryIndex = index1D >> 1;
-    float4 entry = _ClusterLightsCount[entryIndex];
+    int entryIndex = clusterIndex1D >> 1;       // clusterIndex1D / 2
+    int4 entry = _ClusterLightsCount[entryIndex];
     
-    startIndex = entry[(index1D & 0x1) << 1];
-    count = entry[((index1D & 0x1) << 1) + 1];
+    startIndex = entry[(clusterIndex1D & 0x1) << 1];    // (clusterIndex1D % 2) * 2 
+    count = entry[((clusterIndex1D & 0x1) << 1) + 1];   // (clusterIndex1D % 2) * 2 + 1
 }
 
+int GetAdditionalLightIndexOfCluster(int lightIndexInIndicesArray)
+{
+    int entryIndex = lightIndexInIndicesArray >> 4; // lightIndexInIndicesArray / 16
+    int compIndex = (lightIndexInIndicesArray & 0xf) >> 2;  // (lightIndexInIndicesArray % 16) / 4
+    int maskIndex = lightIndexInIndicesArray & 0x3; // lightIndexInIndicesArray % 4
+    int mask = 0xff << (maskIndex << 3);    // 0xff << (maskIndex * 8)
+    
+    int index32 = (int)_ClusterLightIndices[entryIndex][compIndex];
+    
+    return (index32 >> (maskIndex << 3)) & 0xff;    // (index32 & mask) >> (maskIndex * 8)
+}
+ 
 #endif

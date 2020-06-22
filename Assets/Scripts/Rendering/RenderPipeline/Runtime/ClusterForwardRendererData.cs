@@ -1,9 +1,12 @@
 using System;
-using UnityEditor;
-using UnityEditor.ProjectWindowCallback;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+
+#if UNITY_EDITOR
+using UnityEditor;
+using UnityEditor.ProjectWindowCallback;
+#endif
 
 namespace Rendering.RenderPipeline
 {
