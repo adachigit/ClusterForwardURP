@@ -144,7 +144,6 @@ half4 LitPassFragment(Varyings input) : SV_Target
     color.rgb = MixFog(color.rgb, inputData.fogCoord);
     
     return color;
-//    return (float(count) / 8.0);//float4(clusterIndex3D, 1) / float4(_ClusterCountParams);//float4(float3(clusterIndex3D.z, clusterIndex3D.z, clusterIndex3D.z) / float3(_ClusterCountParams.z, _ClusterCountParams.z, _ClusterCountParams.z), 1.0);//color * startIndex;// * float4(clusterIndex3D, 1.0f);
 }
 
 #endif
