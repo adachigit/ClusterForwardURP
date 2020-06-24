@@ -87,7 +87,6 @@ namespace Rendering.RenderPipeline
                 m_ScreenWidth = camera.pixelWidth;
                 m_ScreenHeight = camera.pixelHeight;
                 m_CameraNearZ = camera.nearClipPlane;
-                m_MaxClusterZFar = rendererData.maxClusterZFar;
                 
                 if (!BuildClusters())
                     return false;

@@ -78,6 +78,7 @@ namespace Rendering.RenderPipeline
                 clusterLightsCount = GetLightsCountContainer(camera, cluster),
                 clusterLightsIndices = GetLightIndicesContainer(camera, cluster),
                 clustersCount = cluster.clusterCount.x * cluster.clusterCount.y * cluster.clusterCount.z,
+                maxLightsCountPerCluster = cluster.rendererData.lightsCountPerCluster,
                 
                 lightsCountBuffer = GetLightsCountCBContainer(camera),
                 lightIndicesBuffer = GetLightIndicesCBContainer(camera),
