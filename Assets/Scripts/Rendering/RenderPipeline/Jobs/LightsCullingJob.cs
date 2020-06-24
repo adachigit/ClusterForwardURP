@@ -1,6 +1,7 @@
 using Rendering.RenderPipeline;
 using Unity.Burst;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
@@ -25,8 +26,9 @@ namespace Rendering.RenderPipeline.Jobs
         public float clusterZFar;
         public float zLogFactor;
         public bool isClusterZPrior;
+        public int maxLightsCountPerCluster;
 
-        public NativeMultiHashMap<int, int> clusterLightIndices;
+        public NativeArray<int> clusterLightIndices;
         public NativeArray<int> clusterLightsCount;
 
         public float4x4 worldToViewMat;
@@ -34,14 +36,11 @@ namespace Rendering.RenderPipeline.Jobs
 
         private int totalClustersCount;
         
-        public void Execute()
+        public unsafe void Execute()
         {
             totalClustersCount = clusterCount.x * clusterCount.y * clusterCount.z;
-            
-            for (int i = 0; i < totalClustersCount; ++i)
-            {
-                clusterLightsCount[i] = 0;
-            }
+
+            UnsafeUtility.MemSet(clusterLightsCount.GetUnsafePtr(), 0, clusterLightsCount.Length * sizeof(int));
 
             for (int i = 0; i < lightsCount; ++i)
             {
@@ -65,8 +64,7 @@ namespace Rendering.RenderPipeline.Jobs
         {
             for (int i = 0; i < totalClustersCount; ++i)
             {
-                clusterLightsCount[i] = clusterLightsCount[i] + 1;
-                clusterLightIndices.Add(i, lightIndex);
+                AddLightIndexToCluster(i, lightIndex);
             }
         }
 
@@ -93,8 +91,7 @@ namespace Rendering.RenderPipeline.Jobs
                 centerIndex1D = Cluster.GetClusterIndex1D(centerIndex3D, clusterCount, isClusterZPrior);
                 if (Cluster.IsValidIndex1D(centerIndex1D, clusterCount, isClusterZPrior))
                 {
-                    clusterLightsCount[centerIndex1D] = clusterLightsCount[centerIndex1D] + 1;
-                    clusterLightIndices.Add(centerIndex1D, lightIndex);
+                    AddLightIndexToCluster(centerIndex1D, lightIndex);
                 }
             }
             
@@ -127,12 +124,21 @@ namespace Rendering.RenderPipeline.Jobs
                         var clusterAABB = clusterAABBs[index1D];
                         if (Collision.Detection.SphereIntersectAABB(ref sphere, ref clusterAABB))
                         {
-                            clusterLightsCount[index1D] = clusterLightsCount[index1D] + 1;
-                            clusterLightIndices.Add(index1D, lightIndex);
+                            AddLightIndexToCluster(index1D, lightIndex);
                         }
                     }
                 }
             }
+        }
+
+        private void AddLightIndexToCluster(int clusterIndex1D, int lightIndex)
+        {
+            int lightsCountOfCluster = clusterLightsCount[clusterIndex1D];
+            if (lightsCountOfCluster >= maxLightsCountPerCluster)
+                return;
+
+            clusterLightIndices[clusterIndex1D * maxLightsCountPerCluster + lightsCountOfCluster] = lightIndex;
+            clusterLightsCount[clusterIndex1D] = lightsCountOfCluster + 1;
         }
     }
 }

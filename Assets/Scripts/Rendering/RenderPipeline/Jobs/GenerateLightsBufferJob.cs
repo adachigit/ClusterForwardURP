@@ -12,9 +12,10 @@ namespace Rendering.RenderPipeline.Jobs
         public NativeArray<int4> lightIndicesBuffer;
 
         public int clustersCount;
+        public int maxLightsCountPerCluster;
         
         [ReadOnly] public NativeArray<int> clusterLightsCount;
-        [ReadOnly] public NativeMultiHashMap<int, int> clusterLightsIndices;
+        [ReadOnly] public NativeArray<int> clusterLightsIndices;
         
         public void Execute()
         {
@@ -31,27 +32,24 @@ namespace Rendering.RenderPipeline.Jobs
             }
 
             int totalIndicesCount = 0;
-            for (int i = 0; i < clustersCount && totalIndicesCount < lightIndicesBuffer.Length * 16; ++i)
+            for (int clusterIndex1D = 0; clusterIndex1D < clustersCount && totalIndicesCount < lightIndicesBuffer.Length * 16; ++clusterIndex1D)
             {
-                int lightsCount = clusterLightsCount[i];
+                int lightsCount = clusterLightsCount[clusterIndex1D];
                 if (lightsCount <= 0) continue;
 
-                var lCounter = 0;
-                var ite = clusterLightsIndices.GetValuesForKey(i);
-                while (ite.MoveNext() && lCounter < lightsCount)
+                for(int i = 0; i < lightsCount; ++i)
                 {
                     int index = totalIndicesCount / 16;    // 算出float4在Constant Buffer中的索引
                     var compIndex = (totalIndicesCount % 16) / 4;    // 算出使用float4中的第几个分量
                     int maskIndex = totalIndicesCount % 4;    // 掩码的索引位置
                     int mask = ~(0xff << (maskIndex * 8));    // 掩码
                     
-                    var lightIndex = ite.Current;
+                    var lightIndex = clusterLightsIndices[clusterIndex1D * maxLightsCountPerCluster + i];
                     int4 entry = lightIndicesBuffer[index];
                     entry[compIndex] = (entry[compIndex] & mask) | (0xff & lightIndex) << (maskIndex * 8);
                     lightIndicesBuffer[index] = entry;
 
                     ++totalIndicesCount;
-                    ++lCounter;
 
                     if (totalIndicesCount >= lightIndicesBuffer.Length * 16)
                         break;

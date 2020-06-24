@@ -632,6 +632,7 @@ half4 ClusterFragmentPBR(InputData inputData, half3 albedo, half metallic, half3
     }
 //#endif
 
+//    return count / 4.0;
 #ifdef _ADDITIONAL_LIGHTS_VERTEX
     color += inputData.vertexLighting * brdfData.diffuse;
 #endif

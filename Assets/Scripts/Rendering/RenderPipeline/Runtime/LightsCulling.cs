@@ -27,7 +27,7 @@ namespace Rendering.RenderPipeline
         private const string k_SetupClusterCullingConstants = "Setup Cluster Culling Constants";
         
         private static Dictionary<Camera, JobHandle> m_CameraToJobHandle = new Dictionary<Camera, JobHandle>();
-        private static Dictionary<Camera, NativeMultiHashMap<int, int>> m_CameraToLightIndicesContainer = new Dictionary<Camera, NativeMultiHashMap<int, int>>();
+        private static Dictionary<Camera, NativeArray<int>> m_CameraToLightIndicesContainer = new Dictionary<Camera, NativeArray<int>>();
         private static Dictionary<Camera, NativeArray<int>> m_CameraToLightsCountContainer = new Dictionary<Camera, NativeArray<int>>();
 
         private static Dictionary<Camera, NativeArray<int4>> m_CameraToLightsCountCBContainer = new Dictionary<Camera, NativeArray<int4>>();
@@ -64,6 +64,7 @@ namespace Rendering.RenderPipeline
                 clusterZFar = cluster.clusterZFar,
                 zLogFactor = cluster.zLogFactor,
                 isClusterZPrior = cluster.rendererData.zPriority,
+                maxLightsCountPerCluster = cluster.rendererData.lightsCountPerCluster,
                 
                 clusterLightIndices = GetLightIndicesContainer(camera, cluster),
                 clusterLightsCount = GetLightsCountContainer(camera, cluster),
@@ -107,16 +108,16 @@ namespace Rendering.RenderPipeline
             CommandBufferPool.Release(cmd);
         }
         
-        private static NativeMultiHashMap<int, int> GetLightIndicesContainer(Camera camera, Cluster cluster)
+        private static NativeArray<int> GetLightIndicesContainer(Camera camera, Cluster cluster)
         {
-            NativeMultiHashMap<int, int> container;
+            NativeArray<int> container;
 
             if (m_CameraToLightIndicesContainer.TryGetValue(camera, out container))
             {
                 return container;
             }
 
-            container = new NativeMultiHashMap<int, int>(cluster.maxClustersCount * cluster.rendererData.lightsCountPerCluster, Allocator.Persistent);
+            container = new NativeArray<int>(cluster.maxClustersCount * cluster.rendererData.lightsCountPerCluster, Allocator.Persistent);
             m_CameraToLightIndicesContainer.Add(camera, container);
 
             return container;

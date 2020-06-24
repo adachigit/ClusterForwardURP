@@ -2,7 +2,7 @@
 #define UNIVERSAL_INPUT_INCLUDED
 
 #define MAX_VISIBLE_LIGHTS_SSBO 256
-#define MAX_VISIBLE_LIGHTS_UBO  256
+#define MAX_VISIBLE_LIGHTS_UBO  32
 
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ShaderTypes.cs.hlsl"
 
@@ -54,13 +54,13 @@ half4 _AdditionalLightsCount;
 StructuredBuffer<LightData> _AdditionalLightsBuffer;
 StructuredBuffer<int> _AdditionalLightsIndices;
 #else
-CBUFFER_START(_AdditionalLightsBuffer)
+//CBUFFER_START(_AdditionalLightsBuffer)
     float4 _AdditionalLightsPosition[MAX_VISIBLE_LIGHTS];
     half4 _AdditionalLightsColor[MAX_VISIBLE_LIGHTS];
     half4 _AdditionalLightsAttenuation[MAX_VISIBLE_LIGHTS];
     half4 _AdditionalLightsSpotDir[MAX_VISIBLE_LIGHTS];
     half4 _AdditionalLightsOcclusionProbes[MAX_VISIBLE_LIGHTS];
-CBUFFER_END
+//CBUFFER_END
 #endif
 
 #define UNITY_MATRIX_M     unity_ObjectToWorld
