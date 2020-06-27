@@ -40,6 +40,7 @@ namespace Rendering.RenderPipeline
 
         [SerializeField] bool m_ZPriority;
 
+        [SerializeField] private float m_PointLightAttenRange;
         [SerializeField] private int m_LightsCountPerCluster;
         [SerializeField] private bool m_LightsSorting;
         
@@ -71,6 +72,11 @@ namespace Rendering.RenderPipeline
         public bool zPriority
         {
             get => m_ZPriority;
+        }
+
+        public float pointLightAttenRange
+        {
+            get => m_PointLightAttenRange;
         }
 
         public int lightsCountPerCluster

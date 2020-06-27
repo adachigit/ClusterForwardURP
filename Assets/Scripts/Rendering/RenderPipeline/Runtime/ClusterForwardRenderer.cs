@@ -67,12 +67,12 @@ namespace Rendering.RenderPipeline
         {
             Cluster cluster = GetCluster(renderingData.cameraData.camera);
             ClusterForwardLights lights = GetLights(renderingData.cameraData.camera);
-            
-            LightsCulling.Start(context, ref renderingData, lights, cluster);
-            
+
             if (!cluster.Setup(ref renderingData))
                 return;
             lights.Setup(context, ref renderingData);
+
+            LightsCulling.Start(context, ref renderingData, lights, cluster);
             
             //画不透明物体
             EnqueuePass(m_RenderOpaqueForwardPass);
