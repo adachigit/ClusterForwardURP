@@ -11,6 +11,7 @@ int2 GetClusterIndexXY(float2 screenPos)
     float screenX = screenPos.x;
     float screenY = screenPos.y;
 
+    // The screen coordinate (0, 0) is at bottom-left in OpenGL and at top-lef in DirectX.
     if(_ProjectionParams.x > 0)
     {
         screenY = _ScreenParams.y - screenY;

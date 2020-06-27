@@ -38,26 +38,25 @@ namespace Rendering.RenderPipeline
         
         public static void Start(ScriptableRenderContext context, ref RenderingData renderingData, ClusterForwardLights lights, Cluster cluster)
         {
-            Camera camera = renderingData.cameraData.camera;
-
-            JobHandle jobHandle = GetJobHandle(camera);
-            jobHandle.Complete();
-            
-            lights.ApplyConstantBuffer(context);
-            ApplyConstantBuffer(context, ref renderingData, lights, cluster);
+            ExecuteCullingAndGenerateJobs(context, ref renderingData, lights, cluster);
         }
 
         public static void Finish(ScriptableRenderContext context, ref RenderingData renderingData, ClusterForwardLights lights, Cluster cluster)
         {
+            CompleteJobsAndApplyConstantBuffers(context, ref renderingData, lights, cluster);
+        }
+
+        private static void ExecuteCullingAndGenerateJobs(ScriptableRenderContext context, ref RenderingData renderingData, ClusterForwardLights lights, Cluster cluster)
+        {
             Camera camera = renderingData.cameraData.camera;
-            
+
             var cullingJob = new LightsCullingJob
             {
                 lightDatas = lights.additionalLights,
                 clusterAABBs = cluster.clusterAABBs,
                 clusterSpheres = cluster.clusterSpheres,
                 lightsCount = lights.additionalLightsCount,
-                
+
                 screenDimension = cluster.screenDimension,
                 clusterSize = cluster.clusterSize,
                 clusterCount = cluster.clusterCount,
@@ -65,7 +64,7 @@ namespace Rendering.RenderPipeline
                 zLogFactor = cluster.zLogFactor,
                 isClusterZPrior = cluster.rendererData.zPriority,
                 maxLightsCountPerCluster = cluster.rendererData.lightsCountPerCluster,
-                
+
                 clusterLightIndices = GetLightIndicesContainer(camera, cluster),
                 clusterLightsCount = GetLightsCountContainer(camera, cluster),
                 worldToViewMat = camera.worldToCameraMatrix,
@@ -79,14 +78,25 @@ namespace Rendering.RenderPipeline
                 clusterLightsIndices = GetLightIndicesContainer(camera, cluster),
                 clustersCount = cluster.clusterCount.x * cluster.clusterCount.y * cluster.clusterCount.z,
                 maxLightsCountPerCluster = cluster.rendererData.lightsCountPerCluster,
-                
+
                 lightsCountBuffer = GetLightsCountCBContainer(camera),
                 lightIndicesBuffer = GetLightIndicesCBContainer(camera),
             };
             var generateJobHandle = generateJob.Schedule(cullingJobHandle);
             JobHandle.ScheduleBatchedJobs();
-            
+
             SetJobHandle(camera, generateJobHandle);
+        }
+
+        private static void CompleteJobsAndApplyConstantBuffers(ScriptableRenderContext context, ref RenderingData renderingData, ClusterForwardLights lights, Cluster cluster)
+        {
+            Camera camera = renderingData.cameraData.camera;
+
+            JobHandle jobHandle = GetJobHandle(camera);
+            jobHandle.Complete();
+
+            lights.ApplyConstantBuffer(context);
+            ApplyConstantBuffer(context, ref renderingData, lights, cluster);
         }
 
         private static void ApplyConstantBuffer(ScriptableRenderContext context, ref RenderingData renderingData, ClusterForwardLights lights, Cluster cluster)

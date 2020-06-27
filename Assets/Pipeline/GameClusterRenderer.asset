@@ -37,9 +37,10 @@ MonoBehaviour:
     zFailOperation: 0
   m_ShadowTransparentReceive: 1
   m_MaxClusterZFar: 50
-  m_ClusterGridSizeX: 48
-  m_ClusterGridSizeY: 48
+  m_ClusterGridSizeX: 80
+  m_ClusterGridSizeY: 80
   m_ClusterZCount: 20
   m_ZPriority: 1
-  m_LightsCountPerCluster: 8
+  m_PointLightAttenRange: 0
+  m_LightsCountPerCluster: 16
   m_LightsSorting: 1
