@@ -625,7 +625,7 @@ half4 ClusterFragmentPBR(InputData inputData, half3 albedo, half metallic, half3
 //#ifdef _ADDITIONAL_LIGHTS
     int count, startIndex;
     GetAdditionalLightsCountAndIndicesStartIndex(inputData, count, startIndex);
-    for (uint i = 0; i < count; ++i)
+    for (int i = 0; i < count; ++i)
     {
         Light light = GetAdditionalLight(startIndex, i, inputData.positionWS);
         color += LightingPhysicallyBased(brdfData, light, inputData.normalWS, inputData.viewDirectionWS);

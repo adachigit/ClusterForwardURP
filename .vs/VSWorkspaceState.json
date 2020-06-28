@@ -5,13 +5,12 @@
     "\\Assets\\Scripts",
     "\\Assets\\Scripts\\Rendering",
     "\\Assets\\Scripts\\Rendering\\RenderPipeline",
-    "\\Assets\\Scripts\\Rendering\\RenderPipeline\\Jobs",
     "\\Assets\\Scripts\\Rendering\\RenderPipeline\\Runtime",
     "\\Assets\\Scripts\\Rendering\\RenderPipeline\\ShaderLibrary",
     "\\CustomPackage",
     "\\CustomPackage\\com.unity.render-pipelines.universal",
-    "\\CustomPackage\\com.unity.render-pipelines.universal\\Runtime"
+    "\\CustomPackage\\com.unity.render-pipelines.universal\\ShaderLibrary"
   ],
-  "SelectedNode": "\\Assets\\Scripts\\Rendering\\RenderPipeline\\Jobs\\LightsCullingJob.cs",
+  "SelectedNode": "\\Assets\\Scripts\\Rendering\\RenderPipeline\\Runtime\\ClusterForwardLights.cs",
   "PreviewInSolutionExplorer": false
 }
