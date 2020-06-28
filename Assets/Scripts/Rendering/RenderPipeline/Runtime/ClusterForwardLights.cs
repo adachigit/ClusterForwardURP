@@ -26,10 +26,10 @@ namespace Rendering.RenderPipeline
             public static int _AdditionalLightsSpotDir = Shader.PropertyToID("_AdditionalLightsSpotDir");
             //附加光源Constant Buffer各数组size和offset定义
             public static unsafe int _ElemSize_AdditionalLightsPosition = sizeof(float4);
-            public static unsafe int _ElemSize_AdditionalLightsColor = sizeof(half4);
-            public static unsafe int _ElemSize_AdditionalLightsAttenuation = sizeof(half4);
-            public static unsafe int _ElemSize_AdditionalLightsSpotDir = sizeof(half4);
-            public static unsafe int _ElemSize_AdditionalLightsProbeChannel = sizeof(half4);
+            public static unsafe int _ElemSize_AdditionalLightsColor = sizeof(float4);
+            public static unsafe int _ElemSize_AdditionalLightsAttenuation = sizeof(float4);
+            public static unsafe int _ElemSize_AdditionalLightsSpotDir = sizeof(float4);
+            public static unsafe int _ElemSize_AdditionalLightsProbeChannel = sizeof(float4);
             
             public static unsafe int _ArraySize_AdditionalLightsPosition = _ElemSize_AdditionalLightsPosition * k_MaxAdditionalLightsCount;
             public static unsafe int _ArraySize_AdditionalLightsColor = _ElemSize_AdditionalLightsColor * k_MaxAdditionalLightsCount;
@@ -52,7 +52,7 @@ namespace Rendering.RenderPipeline
                 _ElemSize_AdditionalLightsProbeChannel;
         }
 
-        private const int k_MaxAdditionalLightsCount = 32;
+        private const int k_MaxAdditionalLightsCount = 256;
         private const string k_SetupLightConstants = "Setup Light Constants";
 
         private static readonly float4 k_DefaultLightPosition = float4(0.0f, 0.0f, 1.0f, 0.0f);
@@ -70,10 +70,10 @@ namespace Rendering.RenderPipeline
         Vector4[] m_AdditionalLightSpotDirections;    // 聚光灯方向
         Vector4[] m_AdditionalLightOcclusionProbeChannels;
         private NativeArray<float4> m_AdditionalLightsPosition;
-        private NativeArray<half4> m_AdditionalLightsColor;
-        private NativeArray<half4> m_AdditionalLightsAttenuation;
-        private NativeArray<half4> m_AdditionalLightsSpotDirection;
-        private NativeArray<half4> m_AdditionalLightsOcclusionProbeChannel;
+        private NativeArray<float4> m_AdditionalLightsColor;
+        private NativeArray<float4> m_AdditionalLightsAttenuation;
+        private NativeArray<float4> m_AdditionalLightsSpotDirection;
+        private NativeArray<float4> m_AdditionalLightsOcclusionProbeChannel;
 
         private ComputeBuffer m_AdditionalLightsBuffer;
         
@@ -122,14 +122,14 @@ namespace Rendering.RenderPipeline
             m_AdditionalLightOcclusionProbeChannels = new Vector4[k_MaxAdditionalLightsCount];
 
             m_AdditionalLightsPosition = new NativeArray<float4>(k_MaxAdditionalLightsCount, Allocator.Persistent);
-            m_AdditionalLightsColor = new NativeArray<half4>(k_MaxAdditionalLightsCount, Allocator.Persistent);
-            m_AdditionalLightsAttenuation = new NativeArray<half4>(k_MaxAdditionalLightsCount, Allocator.Persistent);
-            m_AdditionalLightsSpotDirection = new NativeArray<half4>(k_MaxAdditionalLightsCount, Allocator.Persistent);
-            m_AdditionalLightsOcclusionProbeChannel = new NativeArray<half4>(k_MaxAdditionalLightsCount, Allocator.Persistent);
+            m_AdditionalLightsColor = new NativeArray<float4>(k_MaxAdditionalLightsCount, Allocator.Persistent);
+            m_AdditionalLightsAttenuation = new NativeArray<float4>(k_MaxAdditionalLightsCount, Allocator.Persistent);
+            m_AdditionalLightsSpotDirection = new NativeArray<float4>(k_MaxAdditionalLightsCount, Allocator.Persistent);
+            m_AdditionalLightsOcclusionProbeChannel = new NativeArray<float4>(k_MaxAdditionalLightsCount, Allocator.Persistent);
             
             m_AdditionalLights = new NativeArray<VisibleLight>(k_MaxAdditionalLightsCount, Allocator.Persistent);
 
-            m_AdditionalLightsBuffer = new ComputeBuffer(LightConstantBuffer._Buffer_Total_Size / sizeof(half4), sizeof(half4), ComputeBufferType.Constant);
+            m_AdditionalLightsBuffer = new ComputeBuffer(LightConstantBuffer._Buffer_Total_Size / sizeof(float4), sizeof(float4), ComputeBufferType.Constant);
 
             m_Renderer = renderer;
         }
@@ -163,19 +163,19 @@ namespace Rendering.RenderPipeline
                 if (lightIndex != renderingData.lightData.mainLightIndex)
                 {
                     SetupLightInfos(renderingData.lightData.visibleLights, lightIndex,
-                        out m_AdditionalLightPositions[m_AdditionalLightsCount],
-                        out m_AdditionalLightColors[m_AdditionalLightsCount],
-                        out m_AdditionalLightAttenuations[m_AdditionalLightsCount],
-                        out m_AdditionalLightSpotDirections[m_AdditionalLightsCount]
-//                            out var position,
-//                            out var color,
-//                            out var attenuation,
-//                            out var spotDir
+//                        out m_AdditionalLightPositions[m_AdditionalLightsCount],
+//                        out m_AdditionalLightColors[m_AdditionalLightsCount],
+//                        out m_AdditionalLightAttenuations[m_AdditionalLightsCount],
+//                        out m_AdditionalLightSpotDirections[m_AdditionalLightsCount]
+                            out float4 position,
+                            out half4 color,
+                            out half4 attenuation,
+                            out half4 spotDir
                         );
-//                    m_AdditionalLightsPosition[m_AdditionalLightsCount] = position;
-//                    m_AdditionalLightsColor[m_AdditionalLightsCount] = color;
-//                    m_AdditionalLightsAttenuation[m_AdditionalLightsCount] = attenuation;
-//                    m_AdditionalLightsSpotDirection[m_AdditionalLightsCount] = spotDir;
+                    m_AdditionalLightsPosition[m_AdditionalLightsCount] = position;
+                    m_AdditionalLightsColor[m_AdditionalLightsCount] = color;
+                    m_AdditionalLightsAttenuation[m_AdditionalLightsCount] = attenuation;
+                    m_AdditionalLightsSpotDirection[m_AdditionalLightsCount] = spotDir;
                     
                     m_AdditionalLights[m_AdditionalLightsCount++] = renderingData.lightData.visibleLights[lightIndex];
                 }
@@ -219,7 +219,7 @@ namespace Rendering.RenderPipeline
                 // * 另一个平滑衰减因子使用了与Unity lightMapper中相同的公式，但是要比第一个慢，公式如下
                 //   smoothFactor = (1.0 - saturate((distanceSqr * 1.0 / lightRangeSqr)^2))^2
                 float lightRangeSqr = lightData.range * lightData.range;
-                float fadeStartDistanceSqr = 0.8f * 0.8f * lightRangeSqr;    
+                float fadeStartDistanceSqr = math.pow(1.0f - m_Renderer.rendererData.pointLightAttenRange, 2.0f) * lightRangeSqr;    
                 float fadeRangeSqr = (fadeStartDistanceSqr - lightRangeSqr);
                 float oneOverFadeRangeSqr = 1.0f / fadeRangeSqr;
                 float lightRangeSqrOverFadeRangeSqr = -lightRangeSqr / fadeRangeSqr;
@@ -293,7 +293,7 @@ namespace Rendering.RenderPipeline
                 // * 另一个平滑衰减因子使用了与Unity lightMapper中相同的公式，但是要比第一个慢，公式如下
                 //   smoothFactor = (1.0 - saturate((distanceSqr * 1.0 / lightRangeSqr)^2))^2
                 float lightRangeSqr = lightData.range * lightData.range;
-                float fadeStartDistanceSqr = 0.8f * 0.8f * lightRangeSqr;    
+                float fadeStartDistanceSqr = math.pow(1.0f - m_Renderer.rendererData.pointLightAttenRange, 2.0f) * lightRangeSqr;    
                 float fadeRangeSqr = (fadeStartDistanceSqr - lightRangeSqr);
                 float oneOverFadeRangeSqr = 1.0f / fadeRangeSqr;
                 float lightRangeSqrOverFadeRangeSqr = -lightRangeSqr / fadeRangeSqr;
@@ -370,17 +370,17 @@ namespace Rendering.RenderPipeline
             cmd.SetGlobalVector(LightConstantBuffer._MainLightPosition, m_MainLightPosition);
             cmd.SetGlobalVector(LightConstantBuffer._MainLightColor, float4(m_MainLightColor));
             
-            cmd.SetGlobalVectorArray(LightConstantBuffer._AdditionalLightsPosition, m_AdditionalLightPositions);
-            cmd.SetGlobalVectorArray(LightConstantBuffer._AdditionalLightsColor, m_AdditionalLightColors);
-            cmd.SetGlobalVectorArray(LightConstantBuffer._AdditionalLightsAttenuation, m_AdditionalLightAttenuations);
-            cmd.SetGlobalVectorArray(LightConstantBuffer._AdditionalLightsSpotDir, m_AdditionalLightSpotDirections);
+//            cmd.SetGlobalVectorArray(LightConstantBuffer._AdditionalLightsPosition, m_AdditionalLightPositions);
+//            cmd.SetGlobalVectorArray(LightConstantBuffer._AdditionalLightsColor, m_AdditionalLightColors);
+//            cmd.SetGlobalVectorArray(LightConstantBuffer._AdditionalLightsAttenuation, m_AdditionalLightAttenuations);
+//            cmd.SetGlobalVectorArray(LightConstantBuffer._AdditionalLightsSpotDir, m_AdditionalLightSpotDirections);
 
-//            m_AdditionalLightsBuffer.SetData(m_AdditionalLightsPosition, 0, LightConstantBuffer._Offset_AdditionalLightsPosition, m_AdditionalLightsPosition.Length);
-//            m_AdditionalLightsBuffer.SetData(m_AdditionalLightsColor, 0, LightConstantBuffer._Offset_AdditionalLightsColor, m_AdditionalLightsColor.Length);
-//            m_AdditionalLightsBuffer.SetData(m_AdditionalLightsAttenuation, 0, LightConstantBuffer._Offset_AdditionalLightsAttenuation, m_AdditionalLightsAttenuation.Length);
-//            m_AdditionalLightsBuffer.SetData(m_AdditionalLightsSpotDirection, 0, LightConstantBuffer._Offset_AdditionalLightsSpotDir, m_AdditionalLightsSpotDirection.Length);
-//            m_AdditionalLightsBuffer.SetData(m_AdditionalLightsOcclusionProbeChannel, 0, LightConstantBuffer._Offset_AdditionalLightsProbeChannel, m_AdditionalLightsOcclusionProbeChannel.Length);
-//            cmd.SetGlobalConstantBuffer(m_AdditionalLightsBuffer, LightConstantBuffer._AdditionalLights, 0, LightConstantBuffer._Buffer_Total_Size);
+            m_AdditionalLightsBuffer.SetData(m_AdditionalLightsPosition, 0, LightConstantBuffer._Offset_AdditionalLightsPosition, m_AdditionalLightsPosition.Length);
+            m_AdditionalLightsBuffer.SetData(m_AdditionalLightsColor, 0, LightConstantBuffer._Offset_AdditionalLightsColor, m_AdditionalLightsColor.Length);
+            m_AdditionalLightsBuffer.SetData(m_AdditionalLightsAttenuation, 0, LightConstantBuffer._Offset_AdditionalLightsAttenuation, m_AdditionalLightsAttenuation.Length);
+            m_AdditionalLightsBuffer.SetData(m_AdditionalLightsSpotDirection, 0, LightConstantBuffer._Offset_AdditionalLightsSpotDir, m_AdditionalLightsSpotDirection.Length);
+            m_AdditionalLightsBuffer.SetData(m_AdditionalLightsOcclusionProbeChannel, 0, LightConstantBuffer._Offset_AdditionalLightsProbeChannel, m_AdditionalLightsOcclusionProbeChannel.Length);
+            cmd.SetGlobalConstantBuffer(m_AdditionalLightsBuffer, LightConstantBuffer._AdditionalLights, 0, LightConstantBuffer._Buffer_Total_Size);
             
             context.ExecuteCommandBuffer(cmd);
             CommandBufferPool.Release(cmd);

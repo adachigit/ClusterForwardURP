@@ -635,8 +635,10 @@ half4 ClusterFragmentPBR(InputData inputData, half3 albedo, half metallic, half3
     int3 clusterIndex3D = GetClusterIndex3D(inputData.positionWS, float2(inputData.positionCS.x, inputData.positionCS.y));
     int clusterIndex1D = GetClusterIndex1D(clusterIndex3D);
 //    return float(clusterIndex1D) / _ClusterCountParams.w;
-//    return count / 4.0;
 //    return _ProjectionParams.x;
+//    return _AdditionalLightsPosition[1];
+//    return count / 8.0f;
+//    return float(startIndex) / 8192.0f;
 #ifdef _ADDITIONAL_LIGHTS_VERTEX
     color += inputData.vertexLighting * brdfData.diffuse;
 #endif

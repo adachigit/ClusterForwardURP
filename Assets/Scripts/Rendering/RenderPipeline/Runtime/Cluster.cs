@@ -133,8 +133,8 @@ namespace Rendering.RenderPipeline
                 {
                     for (int y = 0; y < m_ClusterCountY; ++y)
                     {
-                        float3 pMin = float3(x * m_ClusterGridSizeX, y * m_ClusterGridSizeY, 0.0f);
-                        float3 pMax = float3((x + 1) * m_ClusterGridSizeX, (y + 1) * m_ClusterGridSizeY, 0.0f);
+                        float3 pMin = float3(x * m_GridDimension.x, y * m_GridDimension.y, 0.0f);
+                        float3 pMax = float3((x + 1) * m_GridDimension.x, (y + 1) * m_GridDimension.y, 0.0f);
 
                         pMin = RenderingHelper.ScreenToView(float4(pMin, 1.0f), screenDimension, ref inverseProjMat).xyz;
                         pMax = RenderingHelper.ScreenToView(float4(pMax, 1.0f), screenDimension, ref inverseProjMat).xyz;

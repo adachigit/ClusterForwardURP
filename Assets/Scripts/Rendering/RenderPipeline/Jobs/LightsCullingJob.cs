@@ -126,6 +126,11 @@ namespace Rendering.RenderPipeline.Jobs
                         {
                             AddLightIndexToCluster(index1D, lightIndex);
                         }
+                        else
+                        {
+                            ++x;
+                            --x;
+                        }
                     }
                 }
             }

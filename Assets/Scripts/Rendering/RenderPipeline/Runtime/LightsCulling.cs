@@ -38,11 +38,22 @@ namespace Rendering.RenderPipeline
         
         public static void Start(ScriptableRenderContext context, ref RenderingData renderingData, ClusterForwardLights lights, Cluster cluster)
         {
+            if (renderingData.cameraData.renderType == CameraRenderType.Overlay)
+                return;
+            
+            if (!cluster.Setup(ref renderingData))
+                return;
+            
+            lights.Setup(context, ref renderingData);
+            
             ExecuteCullingAndGenerateJobs(context, ref renderingData, lights, cluster);
         }
 
         public static void Finish(ScriptableRenderContext context, ref RenderingData renderingData, ClusterForwardLights lights, Cluster cluster)
         {
+            if (renderingData.cameraData.renderType == CameraRenderType.Overlay)
+                return;
+            
             CompleteJobsAndApplyConstantBuffers(context, ref renderingData, lights, cluster);
         }
 
