@@ -78,6 +78,23 @@ namespace Utils
             {
                 return Evaluation.IntersectionOfSegmentWithPlane(ref startPoint, ref endPoint, ref plane, out var intersection);
             }
+
+            public static bool ConeIntersectSphere(ref Collider.Cone cone, ref Collider.Sphere sphere)
+            {
+                return true;
+                float halfAngle = cone.angle;// * 0.5f;
+                
+                float3 V = sphere.center - cone.pos;
+                float VlenSq = math.dot(V, V);
+                float V1len = math.dot(V, cone.direction);
+                float distanceClosetPoint = math.cos(halfAngle) * math.sqrt(VlenSq - V1len * V1len) - V1len * math.sin(halfAngle);
+
+                bool angleCull = distanceClosetPoint > sphere.radius;
+                bool frontCull = V1len > sphere.radius + cone.radius * 2.0f;
+                bool backCull = V1len < -cone.radius;
+
+                return !(angleCull || frontCull || backCull);
+            }
         }
     }
 }

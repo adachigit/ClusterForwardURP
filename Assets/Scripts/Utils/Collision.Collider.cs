@@ -29,12 +29,20 @@ namespace Utils
             }
 
             [StructLayout(LayoutKind.Sequential)]
+            public struct AABBi
+            {
+                public int3 min;
+                public int3 max;
+            }
+            
+            [StructLayout(LayoutKind.Sequential)]
             public struct Cone
             {
                 public float3 pos;
                 public float height;
                 public float3 direction;
                 public float radius;
+                public float angle;
             }
         }
     }

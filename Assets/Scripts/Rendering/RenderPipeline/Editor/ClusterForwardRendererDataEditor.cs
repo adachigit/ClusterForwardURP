@@ -67,7 +67,7 @@ namespace Rendering.RenderPipeline.Editor
             EditorGUILayout.PropertyField(m_LightsSorting, Styles.LightsSorting);
             EditorGUI.indentLevel--;
             EditorGUILayout.Space();
-
+            
             serializedObject.ApplyModifiedProperties();
         }
     }

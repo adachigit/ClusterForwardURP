@@ -56,10 +56,10 @@ StructuredBuffer<int> _AdditionalLightsIndices;
 #else
 CBUFFER_START(_AdditionalLightsBuffer)
     float4 _AdditionalLightsPosition[MAX_VISIBLE_LIGHTS];
-    float4 _AdditionalLightsColor[MAX_VISIBLE_LIGHTS];
-    float4 _AdditionalLightsAttenuation[MAX_VISIBLE_LIGHTS];
-    float4 _AdditionalLightsSpotDir[MAX_VISIBLE_LIGHTS];
-    float4 _AdditionalLightsOcclusionProbes[MAX_VISIBLE_LIGHTS];
+    half4 _AdditionalLightsColor[MAX_VISIBLE_LIGHTS];
+    half4 _AdditionalLightsAttenuation[MAX_VISIBLE_LIGHTS];
+    half4 _AdditionalLightsSpotDir[MAX_VISIBLE_LIGHTS];
+    half4 _AdditionalLightsOcclusionProbes[MAX_VISIBLE_LIGHTS];
 CBUFFER_END
 #endif
 

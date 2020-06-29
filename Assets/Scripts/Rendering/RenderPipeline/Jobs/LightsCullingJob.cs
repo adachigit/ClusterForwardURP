@@ -55,6 +55,7 @@ namespace Rendering.RenderPipeline.Jobs
                     AssignPointLight(i, ref l);
                     break;
                 case LightType.Spot:
+                    AssignSpotLight(i, ref l);
                     break;
                 }
             }
@@ -79,22 +80,11 @@ namespace Rendering.RenderPipeline.Jobs
                 center = viewPos.xyz,
                 radius = lightData.range
             };
-            
+            /*
             float2 screenCenter = RenderingHelper.ViewToScreen(viewPos, screenDimension, ref projectionMat);
             int3 centerIndex3D = int3(Cluster.GetClusterXYIndexFromScreenPos(screenCenter, clusterSize),
                 Cluster.GetClusterZIndex(viewPos.z, clusterZFar, clusterCount.z, zLogFactor));
 
-            // 点光源中心所在的cluster肯定被光源覆盖
-            int centerIndex1D = -1;
-            if (Cluster.IsValidIndex3D(centerIndex3D, clusterCount))
-            {
-                centerIndex1D = Cluster.GetClusterIndex1D(centerIndex3D, clusterCount, isClusterZPrior);
-                if (Cluster.IsValidIndex1D(centerIndex1D, clusterCount, isClusterZPrior))
-                {
-                    AddLightIndexToCluster(centerIndex1D, lightIndex);
-                }
-            }
-            
             float2 minScreen = RenderingHelper.ViewToScreen(viewPos - float4(sphere.radius, sphere.radius, 0.0f, 0.0f), screenDimension, ref projectionMat);
             float2 maxScreen = RenderingHelper.ViewToScreen(viewPos + float4(sphere.radius, sphere.radius, 0.0f, 0.0f), screenDimension, ref projectionMat);
             int2 minIndexXY = Cluster.GetClusterXYIndexFromScreenPos(minScreen, clusterSize);
@@ -107,12 +97,26 @@ namespace Rendering.RenderPipeline.Jobs
 
             int minIndexZ = max(0, Cluster.GetClusterZIndex(viewPos.z + sphere.radius, clusterZFar, clusterCount.z, zLogFactor));
             int maxIndexZ = min(clusterCount.z - 1, Cluster.GetClusterZIndex(viewPos.z - sphere.radius, clusterZFar, clusterCount.z, zLogFactor));
+            */
 
-            for (int z = minIndexZ; z <= maxIndexZ; ++z)
+            GetSphereClusterIndexAABB(ref sphere, out Collision.Collider.AABBi aabb, out int3 centerIndex3D);
+
+            // 点光源中心所在的cluster肯定被光源覆盖
+            int centerIndex1D = -1;
+            if (Cluster.IsValidIndex3D(centerIndex3D, clusterCount))
             {
-                for (int y = minIndexXY.y; y <= maxIndexXY.y; ++y)
+                centerIndex1D = Cluster.GetClusterIndex1D(centerIndex3D, clusterCount, isClusterZPrior);
+                if (Cluster.IsValidIndex1D(centerIndex1D, clusterCount, isClusterZPrior))
                 {
-                    for (int x = minIndexXY.x; x <= maxIndexXY.x; ++x)
+                    AddLightIndexToCluster(centerIndex1D, lightIndex);
+                }
+            }
+            
+            for (int z = aabb.min.z; z <= aabb.max.z; ++z)
+            {
+                for (int y = aabb.min.y; y <= aabb.max.y; ++y)
+                {
+                    for (int x = aabb.min.x; x <= aabb.max.x; ++x)
                     {
                         int3 index3D = int3(x, y, z);
                         if (!Cluster.IsValidIndex3D(index3D, clusterCount))
@@ -126,16 +130,107 @@ namespace Rendering.RenderPipeline.Jobs
                         {
                             AddLightIndexToCluster(index1D, lightIndex);
                         }
-                        else
+                    }
+                }
+            }
+        }
+
+        private void AssignSpotLight(int lightIndex, ref VisibleLight lightData)
+        {
+            float4 viewPos = mul(worldToViewMat, lightData.localToWorldMatrix.GetColumn(3));
+            float4 dir = lightData.localToWorldMatrix.GetColumn(2);
+            float4 viewDir = mul(worldToViewMat, dir);
+
+            Collision.Collider.Cone cone = new Collision.Collider.Cone
+            {
+                pos = viewPos.xyz,
+                direction = dir.xyz,
+                angle = lightData.spotAngle,
+                height = lightData.range,
+                radius = (float)(lightData.range * math.tan(lightData.spotAngle * 0.5 * Mathf.Deg2Rad)),
+            };
+
+            Collision.Collider.Sphere spotSphere;
+            float halfAngelRad = Mathf.Deg2Rad * cone.angle * 0.5f;
+            if (lightData.spotAngle > 90)
+            {
+                spotSphere.center = cone.pos + math.cos(cone.angle * Mathf.Deg2Rad * 0.5f) * 2.0f * cone.radius * cone.direction;
+                spotSphere.radius = cone.radius;//math.sin(cone.angle * Mathf.Deg2Rad) * 2.0f * cone.radius;
+            }
+            else
+            {
+                spotSphere.center = cone.pos + (2.0f * cone.radius) / (2.0f * math.sin(cone.angle)) * viewDir.xyz;
+                spotSphere.radius = (2.0f * cone.radius) / (2.0f * math.sin(cone.angle));
+            }
+            
+            GetSphereClusterIndexAABB(ref spotSphere, out Collision.Collider.AABBi aabb, out int3 centerIndex3D);
+            
+            // 点光源中心所在的cluster肯定被光源覆盖
+            int centerIndex1D = -1;
+            if (Cluster.IsValidIndex3D(centerIndex3D, clusterCount))
+            {
+                centerIndex1D = Cluster.GetClusterIndex1D(centerIndex3D, clusterCount, isClusterZPrior);
+                if (Cluster.IsValidIndex1D(centerIndex1D, clusterCount, isClusterZPrior))
+                {
+                    AddLightIndexToCluster(centerIndex1D, lightIndex);
+                }
+            }
+            
+            for (int z = aabb.min.z; z <= aabb.max.z; ++z)
+            {
+                for (int y = aabb.min.y; y <= aabb.max.y; ++y)
+                {
+                    for (int x = aabb.min.x; x <= aabb.max.x; ++x)
+                    {
+                        int3 index3D = int3(x, y, z);
+                        if (!Cluster.IsValidIndex3D(index3D, clusterCount))
+                            continue;
+                        int index1D = Cluster.GetClusterIndex1D(index3D, clusterCount, isClusterZPrior);
+                        //跳过点光源中心点所在的cluster
+                        if (index1D == centerIndex1D) continue;
+
+                        var clusterAABB = clusterAABBs[index1D];
+                        var clusterSphere = clusterSpheres[index1D];
+                        /*
+                        if (Collision.Detection.SphereIntersectAABB(ref spotSphere, ref clusterAABB))
                         {
-                            ++x;
-                            --x;
+                            AddLightIndexToCluster(index1D, lightIndex);
+                        }
+                        */
+                        if (Collision.Detection.ConeIntersectSphere(ref cone, ref clusterSphere))
+                        {
+                            AddLightIndexToCluster(index1D, lightIndex);
                         }
                     }
                 }
             }
         }
 
+        private void GetSphereClusterIndexAABB(ref Collision.Collider.Sphere sphere, out Collision.Collider.AABBi aabb, out int3 centerIndex3D)
+        {
+            float4 centerPos = float4(sphere.center, 1.0f);
+            
+            float2 screenCenter = RenderingHelper.ViewToScreen(centerPos, screenDimension, ref projectionMat);
+            centerIndex3D = int3(Cluster.GetClusterXYIndexFromScreenPos(screenCenter, clusterSize),
+                Cluster.GetClusterZIndex(centerPos.z, clusterZFar, clusterCount.z, zLogFactor));
+            
+            float2 minScreen = RenderingHelper.ViewToScreen(centerPos - float4(sphere.radius, sphere.radius, 0.0f, 0.0f), screenDimension, ref projectionMat);
+            float2 maxScreen = RenderingHelper.ViewToScreen(centerPos + float4(sphere.radius, sphere.radius, 0.0f, 0.0f), screenDimension, ref projectionMat);
+            int2 minIndexXY = Cluster.GetClusterXYIndexFromScreenPos(minScreen, clusterSize);
+            int2 maxIndexXY = Cluster.GetClusterXYIndexFromScreenPos(maxScreen, clusterSize);
+            
+            minIndexXY.x = max(0, minIndexXY.x);
+            minIndexXY.y = max(0, minIndexXY.y);
+            maxIndexXY.x = min(clusterCount.x - 1, maxIndexXY.x);
+            maxIndexXY.y = min(clusterCount.y - 1, maxIndexXY.y);
+
+            int minIndexZ = max(0, Cluster.GetClusterZIndex(centerPos.z + sphere.radius, clusterZFar, clusterCount.z, zLogFactor));
+            int maxIndexZ = min(clusterCount.z - 1, Cluster.GetClusterZIndex(centerPos.z - sphere.radius, clusterZFar, clusterCount.z, zLogFactor));
+
+            aabb.min = int3(minIndexXY, minIndexZ);
+            aabb.max = int3(maxIndexXY, maxIndexZ);
+        }
+        
         private void AddLightIndexToCluster(int clusterIndex1D, int lightIndex)
         {
             int lightsCountOfCluster = clusterLightsCount[clusterIndex1D];

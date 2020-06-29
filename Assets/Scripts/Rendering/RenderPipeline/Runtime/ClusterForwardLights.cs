@@ -57,10 +57,10 @@ namespace Rendering.RenderPipeline
         private const string k_SetupLightConstants = "Setup Light Constants";
 
         private static readonly float4 k_DefaultLightPosition = float4(0.0f, 0.0f, 1.0f, 0.0f);
-        private static readonly half4 k_DefaultLightColor = half4((Vector4)Color.black);
-        private static readonly half4 k_DefaultLightAttenuation = half4(half(0.0f), half(1.0f), half(0.0f), half(1.0f));
-        private static readonly half4 k_DefaultLightSpotDirection = half4(half(0.0f), half(0.0f), half(1.0f), half(0.0f));
-        private static readonly half4 k_DefaultLightsProbeChannel = half4(half(-1.0f), half(1.0f), half(-1.0f), half(-1.0f));
+        private static readonly float4 k_DefaultLightColor = float4((Vector4)Color.black);
+        private static readonly float4 k_DefaultLightAttenuation = float4(0.0f, 1.0f, 0.0f, 1.0f);
+        private static readonly float4 k_DefaultLightSpotDirection = float4(0.0f, 0.0f, 1.0f, 0.0f);
+        private static readonly float4 k_DefaultLightsProbeChannel = float4(-1.0f, 1.0f, -1.0f, -1.0f);
 
         private ClusterForwardRenderer m_Renderer;
         
@@ -76,7 +76,7 @@ namespace Rendering.RenderPipeline
         
         // 主光源属性Constant Buffer数据
         private float4 m_MainLightPosition;
-        private half4 m_MainLightColor;
+        private float4 m_MainLightColor;
         // 有效的附加光源数量
         private int m_AdditionalLightsCount;
         // 附加光源列表，供外部剔除功能使用
@@ -139,7 +139,7 @@ namespace Rendering.RenderPipeline
         
         private void SetupMainLightConstants(ref RenderingData renderingData)
         {
-            half4 lightAttenuation, lightSpotDir;
+            float4 lightAttenuation, lightSpotDir;
             SetupLightInfos(renderingData.lightData.visibleLights, renderingData.lightData.mainLightIndex, out m_MainLightPosition, out m_MainLightColor, out lightAttenuation, out lightSpotDir);
         }
 
@@ -160,9 +160,9 @@ namespace Rendering.RenderPipeline
 //                        out m_AdditionalLightAttenuations[m_AdditionalLightsCount],
 //                        out m_AdditionalLightSpotDirections[m_AdditionalLightsCount]
                             out float4 position,
-                            out half4 color,
-                            out half4 attenuation,
-                            out half4 spotDir
+                            out float4 color,
+                            out float4 attenuation,
+                            out float4 spotDir
                         );
                     m_AdditionalLightsContainer[LightConstantBuffer._Offset_AdditionalLightsPosition + m_AdditionalLightsCount] = position;
                     m_AdditionalLightsContainer[LightConstantBuffer._Offset_AdditionalLightsColor + m_AdditionalLightsCount] = color;
@@ -174,12 +174,27 @@ namespace Rendering.RenderPipeline
             }
         }
 
-        private void SetupLightInfos(NativeArray<VisibleLight> lights, int lightIndex, out Vector4 lightPos, out Vector4 lightColor, out Vector4 lightAttenuation, out Vector4 lightSpotDir)
+        private void SetupLightInfos(NativeArray<VisibleLight> lights, int lightIndex, out float4 lightPos, out float4 lightColor, out float4 lightAttenuation, out float4 lightSpotDir)
         {
-            lightPos = k_DefaultLightPosition;
-            lightColor = new Vector4(k_DefaultLightColor.x, k_DefaultLightColor.y, k_DefaultLightColor.z, k_DefaultLightColor.w);
-            lightAttenuation = new Vector4(k_DefaultLightAttenuation.x, k_DefaultLightAttenuation.y, k_DefaultLightAttenuation.z, k_DefaultLightAttenuation.w);
-            lightSpotDir = new Vector4(k_DefaultLightSpotDirection.x, k_DefaultLightAttenuation.y, k_DefaultLightAttenuation.z, k_DefaultLightAttenuation.w);
+            lightPos.x = k_DefaultLightPosition.x;
+            lightPos.y = k_DefaultLightPosition.y;
+            lightPos.z = k_DefaultLightPosition.z;
+            lightPos.w = k_DefaultLightPosition.w;
+            
+            lightColor.x = k_DefaultLightColor.x;
+            lightColor.y = k_DefaultLightColor.y;
+            lightColor.z = k_DefaultLightColor.z;
+            lightColor.w = k_DefaultLightColor.w;
+            
+            lightAttenuation.x = k_DefaultLightAttenuation.x;
+            lightAttenuation.y = k_DefaultLightAttenuation.y;
+            lightAttenuation.z = k_DefaultLightAttenuation.z;
+            lightAttenuation.w = k_DefaultLightAttenuation.w;
+            
+            lightSpotDir.x = k_DefaultLightSpotDirection.x;
+            lightSpotDir.y = k_DefaultLightSpotDirection.y;
+            lightSpotDir.z = k_DefaultLightSpotDirection.z;
+            lightSpotDir.w = k_DefaultLightSpotDirection.w;
 
             if (lightIndex < 0)
                 return;
@@ -194,7 +209,7 @@ namespace Rendering.RenderPipeline
                 lightPos = lightData.localToWorldMatrix.GetColumn(3);
             }
 
-            lightColor = lightData.finalColor;
+            lightColor = float4((Vector4)lightData.finalColor);
 
             if (lightData.lightType != LightType.Directional)
             {
@@ -219,8 +234,8 @@ namespace Rendering.RenderPipeline
 
                 // 为保持手机和编辑器效果一致，这里统一采用第一种算法。
                 // 由于Unity GI使用第二种算法，因此可能会造成实时效果与Bake效果不一致。
-                lightAttenuation.x = half(oneOverFadeRangeSqr);//Application.isMobilePlatform || SystemInfo.graphicsDeviceType == GraphicsDeviceType.Switch ? oneOverFadeRangeSqr : oneOverLightRangeSqr;
-                lightAttenuation.y = half(lightRangeSqrOverFadeRangeSqr);
+                lightAttenuation.x = oneOverFadeRangeSqr;//Application.isMobilePlatform || SystemInfo.graphicsDeviceType == GraphicsDeviceType.Switch ? oneOverFadeRangeSqr : oneOverLightRangeSqr;
+                lightAttenuation.y = lightRangeSqrOverFadeRangeSqr;
             }
             
             if (lightData.lightType == LightType.Spot)
@@ -234,98 +249,23 @@ namespace Rendering.RenderPipeline
                 // invAngleRange = 1.0 / (cosInnerAngle - cosOuterAngle)
                 // SdotL * invAngleRange + (-cosOuterAngle * invAngleRange)
                 // 这样我们可以通过预计算来使公式计算被一条MAD乘加指令处理
-                float cosOuterAngle = Mathf.Cos(Mathf.Deg2Rad * lightData.spotAngle * 0.5f);
+                float cosOuterAngle = Mathf.Cos(Mathf.Deg2Rad * lightData.spotAngle * 0.6f);
                 float cosInnerAngle;
                 if (lightData.light != null)    // 根据Unity当前版本，这里判空是针对粒子特效里面的光源
                     cosInnerAngle = Mathf.Cos(lightData.light.innerSpotAngle * Mathf.Deg2Rad * 0.5f);
                 else
-                    cosInnerAngle = Mathf.Cos((2.0f * Mathf.Atan(Mathf.Tan(lightData.spotAngle * 0.5f * Mathf.Deg2Rad) * (64.0f - 18.0f) / 64.0f)) * 0.5f);
+                    cosInnerAngle = Mathf.Cos((2.0f * Mathf.Atan(Mathf.Tan(lightData.spotAngle * 0.7f * Mathf.Deg2Rad) * (64.0f - 18.0f) / 64.0f)) * 0.5f);
                 float smoothAngleRange = Mathf.Max(0.001f, cosInnerAngle - cosOuterAngle);
                 float invAngleRange = 1.0f / smoothAngleRange;
                 float add = -cosOuterAngle * invAngleRange;
-                lightAttenuation.z = half(invAngleRange);
-                lightAttenuation.w = half(add);
-            }
-        }
-
-        private void SetupLightInfos(NativeArray<VisibleLight> lights, int lightIndex, out float4 lightPos, out half4 lightColor, out half4 lightAttenuation, out half4 lightSpotDir)
-        {
-            lightPos = k_DefaultLightPosition;
-            lightColor = k_DefaultLightColor;
-            lightAttenuation = k_DefaultLightAttenuation;
-            lightSpotDir = k_DefaultLightSpotDirection;
-
-            if (lightIndex < 0)
-                return;
-
-            VisibleLight lightData = lights[lightIndex];
-            if (lightData.lightType == LightType.Directional)
-            {
-                lightPos = -lightData.localToWorldMatrix.GetColumn(2);    // 方向光将光源方向取反
-            }
-            else
-            {
-                lightPos = lightData.localToWorldMatrix.GetColumn(3);
-            }
-
-            lightColor = half4((Vector4)lightData.finalColor);
-
-            if (lightData.lightType != LightType.Directional)
-            {
-                // 基本的光照衰减公式是1除以物体到灯光距离的平方，即:
-                // attenuation = 1.0 / distanceToLightSqr
-                // 这里URP使用另外两种不同的平滑衰减因子，平滑衰减因子可以保证光照强度在光照范围外衰减到0
-                //
-                // * 第一个平滑衰减因子是从光照范围的80%开始的线性衰减，公式如下
-                //   smoothFactor = (lightRangeSqr - distanceToLightSqr) / (lightRangeSqr - fadeStartDistanceSqr)
-                //   URP重写了这个公式，以使常量部分可被预计算，同时在shader端可被一条MAD乘加指令处理
-                //   smoothFactor =  distanceSqr * (1.0 / (fadeDistanceSqr - lightRangeSqr)) + (-lightRangeSqr / (fadeDistanceSqr - lightRangeSqr)
-                //                   distanceSqr *           oneOverFadeRangeSqr             +              lightRangeSqrOverFadeRangeSqr
-                //
-                // * 另一个平滑衰减因子使用了与Unity lightMapper中相同的公式，但是要比第一个慢，公式如下
-                //   smoothFactor = (1.0 - saturate((distanceSqr * 1.0 / lightRangeSqr)^2))^2
-                float lightRangeSqr = lightData.range * lightData.range;
-                float fadeStartDistanceSqr = math.pow(1.0f - m_Renderer.rendererData.pointLightAttenRange, 2.0f) * lightRangeSqr;    
-                float fadeRangeSqr = (fadeStartDistanceSqr - lightRangeSqr);
-                float oneOverFadeRangeSqr = 1.0f / fadeRangeSqr;
-                float lightRangeSqrOverFadeRangeSqr = -lightRangeSqr / fadeRangeSqr;
-                float oneOverLightRangeSqr = 1.0f / Mathf.Max(0.0001f, lightData.range * lightData.range);
-
-                // 为保持手机和编辑器效果一致，这里统一采用第一种算法。
-                // 由于Unity GI使用第二种算法，因此可能会造成实时效果与Bake效果不一致。
-                lightAttenuation.x = half(oneOverFadeRangeSqr);//Application.isMobilePlatform || SystemInfo.graphicsDeviceType == GraphicsDeviceType.Switch ? oneOverFadeRangeSqr : oneOverLightRangeSqr;
-                lightAttenuation.y = half(lightRangeSqrOverFadeRangeSqr);
-            }
-            
-            if (lightData.lightType == LightType.Spot)
-            {
-                lightSpotDir = half4(-lightData.localToWorldMatrix.GetColumn(2));
-
-                // 聚光灯的线性衰减可以被定义为
-                // (SdotL - cosOuterAngle) / (cosInnerAngle - cosOuterAngle)
-                // 其中SdotL为光源到物体的方向与聚光灯方向的点积值
-                // 这个公式可以被改写为:
-                // invAngleRange = 1.0 / (cosInnerAngle - cosOuterAngle)
-                // SdotL * invAngleRange + (-cosOuterAngle * invAngleRange)
-                // 这样我们可以通过预计算来使公式计算被一条MAD乘加指令处理
-                float cosOuterAngle = Mathf.Cos(Mathf.Deg2Rad * lightData.spotAngle * 0.5f);
-                float cosInnerAngle;
-                if (lightData.light != null)    // 根据Unity当前版本，这里判空是针对粒子特效里面的光源
-                    cosInnerAngle = Mathf.Cos(lightData.light.innerSpotAngle * Mathf.Deg2Rad * 0.5f);
-                else
-                    cosInnerAngle = Mathf.Cos((2.0f * Mathf.Atan(Mathf.Tan(lightData.spotAngle * 0.5f * Mathf.Deg2Rad) * (64.0f - 18.0f) / 64.0f)) * 0.5f);
-                float smoothAngleRange = Mathf.Max(0.001f, cosInnerAngle - cosOuterAngle);
-                float invAngleRange = 1.0f / smoothAngleRange;
-                float add = -cosOuterAngle * invAngleRange;
-                lightAttenuation.z = half(invAngleRange);
-                lightAttenuation.w = half(add);
+                lightAttenuation.z = invAngleRange;
+                lightAttenuation.w = add;
             }
         }
 
         private int[] GetAdditionalLightsIndexArray(ref RenderingData renderingData, bool sorting)
         {
-            List<int> indexArray = new List<int>();
-            List<LightClusterInfo> infoArray = new List<LightClusterInfo>();
+            List<LightClusterInfo> infoArray = new List<LightClusterInfo>(math.min(renderingData.lightData.visibleLights.Length, k_MaxAdditionalLightsCount));
             
             Cluster cluster = m_Renderer.GetCluster(renderingData.cameraData.camera);
             float4x4 worldToViewMat = renderingData.cameraData.camera.worldToCameraMatrix;
@@ -347,6 +287,7 @@ namespace Rendering.RenderPipeline
             if (sorting)
                 infoArray.Sort();
 
+            List<int> indexArray = new List<int>(infoArray.Count);
             for (int i = 0; i < infoArray.Count; ++i)
             {
                 indexArray.Add(infoArray[i].visibleLightIndex);
