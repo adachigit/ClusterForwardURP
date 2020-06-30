@@ -129,22 +129,21 @@ namespace Rendering.RenderPipeline.Jobs
                 direction = viewDir.xyz,
                 angle = lightData.spotAngle,
                 height = lightData.range,
-//                radius = (float)(lightData.range * math.tan(lightData.spotAngle * 0.5 * Mathf.Deg2Rad)),
             };
 
             Collision.Collider.Sphere spotSphere;
             if (lightData.spotAngle > 90)
             {
-                spotSphere.center = cone.pos;// + cone.radius / math.tan(Mathf.Deg2Rad * 0.5f * cone.angle) * cone.direction;
-                spotSphere.radius = cone.height;
+                float baseAngle = (180 - lightData.spotAngle) * 0.5f;
+                spotSphere.radius = cone.height;// cone.height * math.cos(baseAngle * Mathf.Deg2Rad);
+                spotSphere.center = cone.pos;// + cone.height * math.sin(baseAngle) * cone.direction;
             }
             else
             {
                 // 当聚光灯张开角小于等于90度时，外接圆半径公式为：半径 = 底边长度 / 2 * sin(聚光灯张开角)
-                float radius = (2.0f * cone.height * math.tan(cone.angle * 0.5f * Mathf.Deg2Rad)) / (2.0f * math.sin(Mathf.Deg2Rad * cone.angle));
+                spotSphere.radius = (2.0f * cone.height * math.tan(cone.angle * 0.5f * Mathf.Deg2Rad)) / (2.0f * math.sin(Mathf.Deg2Rad * cone.angle));
                 // 聚光灯定点向圆心方向移动半径长度个单位即为圆心位置
-                spotSphere.center = cone.pos + radius * cone.direction;                                                      
-                spotSphere.radius = radius;
+                spotSphere.center = cone.pos + spotSphere.radius * cone.direction;
             }
             
             GetSphereClusterIndexAABB(ref spotSphere, out Collision.Collider.AABBi aabb, out int3 centerIndex3D);
