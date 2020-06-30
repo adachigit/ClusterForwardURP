@@ -80,24 +80,6 @@ namespace Rendering.RenderPipeline.Jobs
                 center = viewPos.xyz,
                 radius = lightData.range
             };
-            /*
-            float2 screenCenter = RenderingHelper.ViewToScreen(viewPos, screenDimension, ref projectionMat);
-            int3 centerIndex3D = int3(Cluster.GetClusterXYIndexFromScreenPos(screenCenter, clusterSize),
-                Cluster.GetClusterZIndex(viewPos.z, clusterZFar, clusterCount.z, zLogFactor));
-
-            float2 minScreen = RenderingHelper.ViewToScreen(viewPos - float4(sphere.radius, sphere.radius, 0.0f, 0.0f), screenDimension, ref projectionMat);
-            float2 maxScreen = RenderingHelper.ViewToScreen(viewPos + float4(sphere.radius, sphere.radius, 0.0f, 0.0f), screenDimension, ref projectionMat);
-            int2 minIndexXY = Cluster.GetClusterXYIndexFromScreenPos(minScreen, clusterSize);
-            int2 maxIndexXY = Cluster.GetClusterXYIndexFromScreenPos(maxScreen, clusterSize);
-            
-            minIndexXY.x = max(0, minIndexXY.x);
-            minIndexXY.y = max(0, minIndexXY.y);
-            maxIndexXY.x = min(clusterCount.x - 1, maxIndexXY.x);
-            maxIndexXY.y = min(clusterCount.y - 1, maxIndexXY.y);
-
-            int minIndexZ = max(0, Cluster.GetClusterZIndex(viewPos.z + sphere.radius, clusterZFar, clusterCount.z, zLogFactor));
-            int maxIndexZ = min(clusterCount.z - 1, Cluster.GetClusterZIndex(viewPos.z - sphere.radius, clusterZFar, clusterCount.z, zLogFactor));
-            */
 
             GetSphereClusterIndexAABB(ref sphere, out Collision.Collider.AABBi aabb, out int3 centerIndex3D);
 
@@ -144,23 +126,25 @@ namespace Rendering.RenderPipeline.Jobs
             Collision.Collider.Cone cone = new Collision.Collider.Cone
             {
                 pos = viewPos.xyz,
-                direction = dir.xyz,
+                direction = viewDir.xyz,
                 angle = lightData.spotAngle,
                 height = lightData.range,
-                radius = (float)(lightData.range * math.tan(lightData.spotAngle * 0.5 * Mathf.Deg2Rad)),
+//                radius = (float)(lightData.range * math.tan(lightData.spotAngle * 0.5 * Mathf.Deg2Rad)),
             };
 
             Collision.Collider.Sphere spotSphere;
-            float halfAngelRad = Mathf.Deg2Rad * cone.angle * 0.5f;
             if (lightData.spotAngle > 90)
             {
-                spotSphere.center = cone.pos + math.cos(cone.angle * Mathf.Deg2Rad * 0.5f) * 2.0f * cone.radius * cone.direction;
-                spotSphere.radius = cone.radius;//math.sin(cone.angle * Mathf.Deg2Rad) * 2.0f * cone.radius;
+                spotSphere.center = cone.pos;// + cone.radius / math.tan(Mathf.Deg2Rad * 0.5f * cone.angle) * cone.direction;
+                spotSphere.radius = cone.height;
             }
             else
             {
-                spotSphere.center = cone.pos + (2.0f * cone.radius) / (2.0f * math.sin(cone.angle)) * viewDir.xyz;
-                spotSphere.radius = (2.0f * cone.radius) / (2.0f * math.sin(cone.angle));
+                // 当聚光灯张开角小于等于90度时，外接圆半径公式为：半径 = 底边长度 / 2 * sin(聚光灯张开角)
+                float radius = (2.0f * cone.height * math.tan(cone.angle * 0.5f * Mathf.Deg2Rad)) / (2.0f * math.sin(Mathf.Deg2Rad * cone.angle));
+                // 聚光灯定点向圆心方向移动半径长度个单位即为圆心位置
+                spotSphere.center = cone.pos + radius * cone.direction;                                                      
+                spotSphere.radius = radius;
             }
             
             GetSphereClusterIndexAABB(ref spotSphere, out Collision.Collider.AABBi aabb, out int3 centerIndex3D);

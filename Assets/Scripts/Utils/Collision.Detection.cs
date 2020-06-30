@@ -95,6 +95,11 @@ namespace Utils
 
                 return !(angleCull || frontCull || backCull);
             }
+
+            public static bool ConeIntersectAABB(ref Collider.Cone cone, ref Collider.AABB aabb)
+            {
+                return true;
+            }
         }
     }
 }
