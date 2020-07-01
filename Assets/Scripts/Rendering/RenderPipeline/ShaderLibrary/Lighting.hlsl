@@ -637,6 +637,7 @@ half4 ClusterFragmentPBR(InputData inputData, half3 albedo, half metallic, half3
 //    return float(clusterIndex1D) / _ClusterCountParams.w;
 //    return _ProjectionParams.x;
 //    return _AdditionalLightsPosition[1];
+//    return count / 1.0f;
 //    return float(clusterIndex1D) / _ClusterCountParams.w * count / 1.0f;
 //    return float(startIndex) / 8192.0f;
 #ifdef _ADDITIONAL_LIGHTS_VERTEX

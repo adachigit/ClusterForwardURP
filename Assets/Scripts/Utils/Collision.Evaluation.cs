@@ -46,6 +46,19 @@ namespace Utils
             }
 
             /// <summary>
+            /// 点到点距离的平方
+            /// </summary>
+            /// <param name="point1"></param>
+            /// <param name="point2"></param>
+            /// <returns></returns>
+            public static float SqrDistancePointToPoint(ref float3 point1, ref float3 point2)
+            {
+                float3 diff = point2 - point1;
+                
+                return math.dot(diff, diff);
+            }
+            
+            /// <summary>
             /// 获得线段与平面的交点
             /// </summary>
             /// <param name="startPoint">线段起点坐标</param>

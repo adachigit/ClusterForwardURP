@@ -1,4 +1,5 @@
 using Unity.Mathematics;
+using UnityEngine;
 
 namespace Utils
 {
@@ -81,24 +82,20 @@ namespace Utils
 
             public static bool ConeIntersectSphere(ref Collider.Cone cone, ref Collider.Sphere sphere)
             {
-                return true;
-                float halfAngle = cone.angle;// * 0.5f;
-                
-                float3 V = sphere.center - cone.pos;
-                float VlenSq = math.dot(V, V);
-                float V1len = math.dot(V, cone.direction);
-                float distanceClosetPoint = math.cos(halfAngle) * math.sqrt(VlenSq - V1len * V1len) - V1len * math.sin(halfAngle);
+                if (Evaluation.SqrDistancePointToPoint(ref cone.pos, ref sphere.center) < math.pow(sphere.radius, 2.0f))
+                    return true;
 
-                bool angleCull = distanceClosetPoint > sphere.radius;
-                bool frontCull = V1len > sphere.radius + cone.radius * 2.0f;
-                bool backCull = V1len < -cone.radius;
+                var vSphere = math.normalize(sphere.center - cone.pos);
+//                if (math.dot(vSphere, cone.direction) > math.cos(cone.angle * 0.5f * Mathf.Deg2Rad))
+//                    return true;
 
-                return !(angleCull || frontCull || backCull);
-            }
+                float3 v1 = math.cross(cone.direction, vSphere);
+                float3 v2 = math.cross(vSphere, v1);
 
-            public static bool ConeIntersectAABB(ref Collider.Cone cone, ref Collider.AABB aabb)
-            {
-                return true;
+                float3 movedCenter = sphere.center + v2 * sphere.radius;
+                float3 v3 = math.normalize(movedCenter - cone.pos);
+
+                return (math.dot(v3, cone.direction) + 0.05f >= math.cos(cone.angle * 0.5f * Mathf.Deg2Rad));
             }
         }
     }
