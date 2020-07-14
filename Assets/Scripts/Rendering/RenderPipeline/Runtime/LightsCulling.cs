@@ -79,7 +79,7 @@ namespace Rendering.RenderPipeline
                 clusterLightIndices = GetLightIndicesContainer(camera, cluster),
                 clusterLightsCount = GetLightsCountContainer(camera, cluster),
                 worldToViewMat = camera.worldToCameraMatrix,
-                projectionMat = GL.GetGPUProjectionMatrix(camera.projectionMatrix, false),
+                projectionMat = camera.projectionMatrix,// GL.GetGPUProjectionMatrix(camera.projectionMatrix, false),
             };
             var cullingJobHandle = cullingJob.Schedule();
 

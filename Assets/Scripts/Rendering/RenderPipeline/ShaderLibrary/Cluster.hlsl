@@ -12,10 +12,12 @@ int2 GetClusterIndexXY(float2 screenPos)
     float screenY = screenPos.y;
 
     // The screen coordinate (0, 0) is at bottom-left in OpenGL and at top-lef in DirectX.
+#if UNITY_UV_STARTS_AT_TOP
     if(_ProjectionParams.x > 0)
     {
         screenY = _ScreenParams.y - screenY;
     }
+#endif
 
     return int2(int(screenX * _ClusterSizeParams.z), int(screenY * _ClusterSizeParams.w));
 }

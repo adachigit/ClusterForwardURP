@@ -20,6 +20,7 @@ namespace Rendering.RenderPipeline
 
         private float m_MaxClusterZFar;
         private float m_CameraNearZ;
+        private float m_CameraFarZ;
         private int m_ClusterGridSizeX;
         private int m_ClusterGridSizeY;
         private float m_ZLogFactor;
@@ -87,6 +88,7 @@ namespace Rendering.RenderPipeline
                 m_ScreenWidth = camera.pixelWidth;
                 m_ScreenHeight = camera.pixelHeight;
                 m_CameraNearZ = camera.nearClipPlane;
+                m_CameraFarZ = camera.farClipPlane;
                 
                 if (!BuildClusters())
                     return false;
@@ -108,10 +110,11 @@ namespace Rendering.RenderPipeline
             
             ComputeZDistances();
 
-            float4x4 inverseProjMat = GL.GetGPUProjectionMatrix(m_Camera.projectionMatrix, false).inverse;
+            float4x4 inverseProjMat = m_Camera.projectionMatrix.inverse;// GL.GetGPUProjectionMatrix(m_Camera.projectionMatrix, false).inverse;
             float2 screenDimension = float2(m_ScreenWidth, m_ScreenHeight);
             int3 clusterDimension = int3(m_ClusterCountX, m_ClusterCountY, m_ClusterCountZ);
             float3 eye = float3(0, 0, 0);
+            float halfDiffNearFar = (m_CameraFarZ - m_CameraNearZ) * 0.5f;
             
             for (int z = 0; z < m_ClusterCountZ; ++z)
             {
@@ -133,16 +136,16 @@ namespace Rendering.RenderPipeline
                 {
                     for (int y = 0; y < m_ClusterCountY; ++y)
                     {
-                        float3 pMin = float3(x * m_GridDimension.x, y * m_GridDimension.y, 0.0f);
-                        float3 pMax = float3((x + 1) * m_GridDimension.x, (y + 1) * m_GridDimension.y, 0.0f);
+                        float3 pMin = float3(x * m_GridDimension.x, y * m_GridDimension.y, 1.0f);
+                        float3 pMax = float3((x + 1) * m_GridDimension.x, (y + 1) * m_GridDimension.y, 1.0f);
 
                         pMin = RenderingHelper.ScreenToView(float4(pMin, 1.0f), screenDimension, ref inverseProjMat).xyz;
                         pMax = RenderingHelper.ScreenToView(float4(pMax, 1.0f), screenDimension, ref inverseProjMat).xyz;
 //                        pMin.z *= -1;
 //                        pMax.z *= -1;
                         //将两个点放大两倍，以确保可以和cluster的远近平面相交
-                        pMin *= 2;
-                        pMax *= 2;
+//                        pMin *= 500;
+//                        pMax *= 500;
 
                         float3 minNear, maxNear, minFar, maxFar;
                         Collision.Evaluation.IntersectionOfSegmentWithPlane(ref eye, ref pMin, ref nearPlane, out minNear);
