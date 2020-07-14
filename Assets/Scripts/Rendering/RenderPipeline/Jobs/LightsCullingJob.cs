@@ -134,9 +134,8 @@ namespace Rendering.RenderPipeline.Jobs
             Collision.Collider.Sphere spotSphere;
             if (lightData.spotAngle > 90)
             {
-                float baseAngle = (180 - lightData.spotAngle) * 0.5f;
-                spotSphere.radius = cone.height;// cone.height * math.cos(baseAngle * Mathf.Deg2Rad);
-                spotSphere.center = cone.pos;// + cone.height * math.sin(baseAngle) * cone.direction;
+                spotSphere.radius = cone.height;
+                spotSphere.center = cone.pos;
             }
             else
             {
@@ -172,14 +171,7 @@ namespace Rendering.RenderPipeline.Jobs
                         //跳过点光源中心点所在的cluster
                         if (index1D == centerIndex1D) continue;
 
-                        var clusterAABB = clusterAABBs[index1D];
                         var clusterSphere = clusterSpheres[index1D];
-                        /*
-                        if (Collision.Detection.SphereIntersectAABB(ref spotSphere, ref clusterAABB))
-                        {
-                            AddLightIndexToCluster(index1D, lightIndex);
-                        }
-                        */
                         if (Collision.Detection.ConeIntersectSphere(ref cone, ref clusterSphere))
                         {
                             AddLightIndexToCluster(index1D, lightIndex);

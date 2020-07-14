@@ -110,11 +110,10 @@ namespace Rendering.RenderPipeline
             
             ComputeZDistances();
 
-            float4x4 inverseProjMat = m_Camera.projectionMatrix.inverse;// GL.GetGPUProjectionMatrix(m_Camera.projectionMatrix, false).inverse;
+            float4x4 inverseProjMat = m_Camera.projectionMatrix.inverse;
             float2 screenDimension = float2(m_ScreenWidth, m_ScreenHeight);
             int3 clusterDimension = int3(m_ClusterCountX, m_ClusterCountY, m_ClusterCountZ);
             float3 eye = float3(0, 0, 0);
-            float halfDiffNearFar = (m_CameraFarZ - m_CameraNearZ) * 0.5f;
             
             for (int z = 0; z < m_ClusterCountZ; ++z)
             {
@@ -141,11 +140,6 @@ namespace Rendering.RenderPipeline
 
                         pMin = RenderingHelper.ScreenToView(float4(pMin, 1.0f), screenDimension, ref inverseProjMat).xyz;
                         pMax = RenderingHelper.ScreenToView(float4(pMax, 1.0f), screenDimension, ref inverseProjMat).xyz;
-//                        pMin.z *= -1;
-//                        pMax.z *= -1;
-                        //将两个点放大两倍，以确保可以和cluster的远近平面相交
-//                        pMin *= 500;
-//                        pMax *= 500;
 
                         float3 minNear, maxNear, minFar, maxFar;
                         Collision.Evaluation.IntersectionOfSegmentWithPlane(ref eye, ref pMin, ref nearPlane, out minNear);
