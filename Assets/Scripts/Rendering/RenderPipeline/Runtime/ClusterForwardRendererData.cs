@@ -43,6 +43,8 @@ namespace Rendering.RenderPipeline
         [SerializeField] private float m_PointLightAttenRange;
         [SerializeField] private int m_LightsCountPerCluster;
         [SerializeField] private bool m_LightsSorting;
+
+        [SerializeField] public bool m_ShowOverdraw;
         
         protected override ScriptableRenderer Create()
         {
@@ -87,6 +89,11 @@ namespace Rendering.RenderPipeline
         public bool lightsSorting
         {
             get => m_LightsSorting;
+        }
+
+        public bool showOverdraw
+        {
+            get => m_ShowOverdraw;
         }
     }
 }

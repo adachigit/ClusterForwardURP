@@ -20,6 +20,9 @@ namespace Rendering.RenderPipeline.Editor
             public static readonly GUIContent PointLightAttenRange = new GUIContent("Point Light Attenuation Range", "Range of point light starts to take attenuation");
             public static readonly GUIContent PerClusterLimit = new GUIContent("Per Cluster LImit", "Max count of lights per cluster");
             public static readonly GUIContent LightsSorting = new GUIContent("Lights Sorting", "Indicate whether sorts the lights to optimize rendering.");
+            
+            public static readonly GUIContent DebugLabel = new GUIContent("Debug", "Controls which debug information will be shown.");
+            public static readonly GUIContent ShowOverdraw = new GUIContent("Show Overdraw", "Show gpu's overdraw");
         }
         
         private SerializedProperty m_MaxClusterZFar;
@@ -30,6 +33,7 @@ namespace Rendering.RenderPipeline.Editor
         private SerializedProperty m_PointLightAttenRange;
         private SerializedProperty m_LightsCountPerCluster;
         private SerializedProperty m_LightsSorting;
+        private SerializedProperty m_ShowOverdraw;
 
         private bool m_HasInit = false;
         
@@ -43,6 +47,7 @@ namespace Rendering.RenderPipeline.Editor
             m_PointLightAttenRange = serializedObject.FindProperty("m_PointLightAttenRange");
             m_LightsCountPerCluster = serializedObject.FindProperty("m_LightsCountPerCluster");
             m_LightsSorting = serializedObject.FindProperty("m_LightsSorting");
+            m_ShowOverdraw = serializedObject.FindProperty("m_ShowOverdraw");
         }
         
         public override void OnInspectorGUI()
@@ -51,7 +56,10 @@ namespace Rendering.RenderPipeline.Editor
             
             if(!m_HasInit) Init();
 
+            EditorGUI.BeginChangeCheck();
+            
             EditorGUILayout.Space();
+            // Cluster options
             EditorGUILayout.LabelField(Styles.ClusterLabel, EditorStyles.boldLabel);
             EditorGUI.indentLevel++;
             EditorGUILayout.PropertyField(m_MaxClusterZFar, Styles.MaxZFar);
@@ -60,15 +68,24 @@ namespace Rendering.RenderPipeline.Editor
             EditorGUILayout.PropertyField(m_ClusterZCount, Styles.ZCount);
             EditorGUILayout.PropertyField(m_ZPriority, Styles.ZPriority);
             EditorGUI.indentLevel--;
+            // Lighting options
             EditorGUILayout.LabelField(Styles.LightingLabel, EditorStyles.boldLabel);
             EditorGUI.indentLevel++;
-            EditorGUILayout.IntSlider(m_LightsCountPerCluster, 0, 16, Styles.PerClusterLimit);
+            EditorGUILayout.IntSlider(m_LightsCountPerCluster, 0, 32, Styles.PerClusterLimit);
             EditorGUILayout.Slider(m_PointLightAttenRange, 0.0f, 1.0f, Styles.PointLightAttenRange);
             EditorGUILayout.PropertyField(m_LightsSorting, Styles.LightsSorting);
             EditorGUI.indentLevel--;
+            // Debug options
+            EditorGUILayout.LabelField(Styles.DebugLabel, EditorStyles.boldLabel);
+            EditorGUI.indentLevel++;
+            EditorGUILayout.PropertyField(m_ShowOverdraw, Styles.ShowOverdraw);
+            EditorGUI.indentLevel--;
             EditorGUILayout.Space();
-            
-            serializedObject.ApplyModifiedProperties();
+
+            if (EditorGUI.EndChangeCheck())
+            {
+                serializedObject.ApplyModifiedProperties();
+            }
         }
     }
 }

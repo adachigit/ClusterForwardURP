@@ -61,6 +61,8 @@ namespace Rendering.RenderPipeline
 
             m_CameraToClusterDic = new Dictionary<Camera, Cluster>();
             m_CameraToLightsDic = new Dictionary<Camera, ClusterForwardLights>();
+
+            NativeLeakDetection.Mode = NativeLeakDetectionMode.EnabledWithStackTrace;
         }
 
         public override void Setup(ScriptableRenderContext context, ref RenderingData renderingData)

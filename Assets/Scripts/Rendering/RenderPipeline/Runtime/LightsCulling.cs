@@ -43,7 +43,8 @@ namespace Rendering.RenderPipeline
             
             if (!cluster.Setup(ref renderingData))
                 return;
-            
+
+//            lights.SetupMainLightConstants(ref renderingData);
             lights.Setup(context, ref renderingData);
             
             ExecuteCullingAndGenerateJobs(context, ref renderingData, lights, cluster);
@@ -61,9 +62,34 @@ namespace Rendering.RenderPipeline
         {
             Camera camera = renderingData.cameraData.camera;
 
+            var collectLightsJob = new CollectLightsJob
+            {
+                additionalLightsInfo = lights.additionalLightsInfo,
+                additionalLightsCount = lights.additionalLightsCount,
+                additionalLightsUBO = lights.m_AdditionalLightsContainer,
+                
+                lightsPositionOffset = ClusterForwardLights.LightConstantBuffer._Offset_AdditionalLightsPosition,
+                lightsColorOffset = ClusterForwardLights.LightConstantBuffer._Offset_AdditionalLightsColor,
+                lightsAttenuationOffset = ClusterForwardLights.LightConstantBuffer._Offset_AdditionalLightsAttenuation,
+                lightsSpotDirOffset = ClusterForwardLights.LightConstantBuffer._Offset_AdditionalLightsSpotDir,
+                
+                viewMat = camera.worldToCameraMatrix,
+                projMat = camera.projectionMatrix,
+                
+                screenDimension = cluster.screenDimension,
+                clusterSize = cluster.clusterSize,
+                clusterCount = cluster.clusterCount,
+                clusterZFar = cluster.clusterZFar,
+                zLogFactor = cluster.zLogFactor,
+                
+                isLightsSorting = cluster.rendererData.lightsSorting,
+                pointLightAttenRange = cluster.rendererData.pointLightAttenRange,
+            };
+            var collectJobHandler = collectLightsJob.Schedule();
+            
             var cullingJob = new LightsCullingJob
             {
-                lightDatas = lights.additionalLights,
+                lightsInfo = lights.additionalLightsInfo,
                 clusterAABBs = cluster.clusterAABBs,
                 clusterSpheres = cluster.clusterSpheres,
                 lightsCount = lights.additionalLightsCount,
@@ -81,7 +107,7 @@ namespace Rendering.RenderPipeline
                 worldToViewMat = camera.worldToCameraMatrix,
                 projectionMat = camera.projectionMatrix,
             };
-            var cullingJobHandle = cullingJob.Schedule();
+            var cullingJobHandle = cullingJob.Schedule(collectJobHandler);
 
             var generateJob = new GenerateLightsBufferJob
             {

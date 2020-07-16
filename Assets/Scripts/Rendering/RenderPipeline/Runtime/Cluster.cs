@@ -239,8 +239,17 @@ namespace Rendering.RenderPipeline
 
         public int3 GetClusterIndex3DFromViewPos(float3 viewPos)
         {
-            float4x4 projectionMatrix = m_Camera.projectionMatrix;
-            float2 screenPos = RenderingHelper.ViewToScreen(float4(viewPos, 1.0f), screenDimension, ref projectionMatrix);
+            float2 dimension = screenDimension;
+            float4x4 projMat = m_Camera.projectionMatrix;
+            var size = clusterSize;
+            var count = clusterCount;
+            
+            return GetClusterIndex3DFromViewPos(viewPos, ref dimension, ref projMat, ref size, ref count, clusterZFar, zLogFactor);
+        }
+
+        public static int3 GetClusterIndex3DFromViewPos(float3 viewPos, ref float2 screenDimension, ref float4x4 projMat, ref int2 clusterSize, ref int3 clusterCount, float clusterZFar, float zLogFactor)
+        {
+            float2 screenPos = RenderingHelper.ViewToScreen(float4(viewPos, 1.0f), screenDimension, ref projMat);
 
             return int3(GetClusterXYIndexFromScreenPos(screenPos, clusterSize), GetClusterZIndex(viewPos.z, clusterZFar, clusterCount.z, zLogFactor));
         }

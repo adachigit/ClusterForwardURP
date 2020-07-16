@@ -7,7 +7,7 @@ public class Startup : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        Screen.SetResolution(1280, 720, true);
+        Screen.SetResolution((int) (720 * Camera.main.aspect), 720, true);
+        Application.targetFrameRate = 600;
     }
-
 }

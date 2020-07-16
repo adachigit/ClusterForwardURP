@@ -15,7 +15,7 @@ namespace Rendering.RenderPipeline.Jobs
     [BurstCompile(CompileSynchronously = true)]
     public struct LightsCullingJob : IJob
     {
-        [ReadOnly] public NativeArray<VisibleLight> lightDatas;
+        [ReadOnly] public NativeArray<ClusterForwardLights.LightInfo> lightsInfo;
         [ReadOnly] public NativeArray<Collision.Collider.AABB> clusterAABBs;
         [ReadOnly] public NativeArray<Collision.Collider.Sphere> clusterSpheres;
         public int lightsCount;
@@ -44,7 +44,7 @@ namespace Rendering.RenderPipeline.Jobs
 
             for (int i = 0; i < lightsCount; ++i)
             {
-                VisibleLight l = lightDatas[i];
+                VisibleLight l = lightsInfo[i].visibleLight;
                 
                 switch (l.lightType)
                 {
