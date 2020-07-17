@@ -9,6 +9,7 @@ using UnityEngine.Rendering;
 using Utils;
 using Collision = Utils.Collision;
 using static Unity.Mathematics.math;
+using int3 = Unity.Mathematics.int3;
 
 namespace Rendering.RenderPipeline.Jobs
 {
@@ -27,6 +28,7 @@ namespace Rendering.RenderPipeline.Jobs
         public float zLogFactor;
         public bool isClusterZPrior;
         public int maxLightsCountPerCluster;
+        public float cameraZNear;
 
         public NativeArray<int> clusterLightIndices;
         public NativeArray<int> clusterLightsCount;
@@ -147,7 +149,7 @@ namespace Rendering.RenderPipeline.Jobs
             
             GetSphereClusterIndexAABB(ref spotSphere, out Collision.Collider.AABBi aabb, out int3 centerIndex3D);
             
-            // 点光源中心所在的cluster肯定被光源覆盖
+            // 聚光灯定点所在的cluster肯定被光源覆盖
             int centerIndex1D = -1;
             if (Cluster.IsValidIndex3D(centerIndex3D, clusterCount))
             {
@@ -188,19 +190,25 @@ namespace Rendering.RenderPipeline.Jobs
             float2 screenCenter = RenderingHelper.ViewToScreen(centerPos, screenDimension, ref projectionMat);
             centerIndex3D = int3(Cluster.GetClusterXYIndexFromScreenPos(screenCenter, clusterSize),
                 Cluster.GetClusterZIndex(centerPos.z, clusterZFar, clusterCount.z, zLogFactor));
-            
-            float2 minScreen = RenderingHelper.ViewToScreen(centerPos - float4(sphere.radius, sphere.radius, 0.0f, 0.0f), screenDimension, ref projectionMat);
-            float2 maxScreen = RenderingHelper.ViewToScreen(centerPos + float4(sphere.radius, sphere.radius, 0.0f, 0.0f), screenDimension, ref projectionMat);
-            int2 minIndexXY = Cluster.GetClusterXYIndexFromScreenPos(minScreen, clusterSize);
-            int2 maxIndexXY = Cluster.GetClusterXYIndexFromScreenPos(maxScreen, clusterSize);
+
+            float sphereZNear = math.min(-cameraZNear, sphere.center.z + sphere.radius);
+            float sphereZFar = math.max(-clusterZFar, sphere.center.z - sphere.radius);
+
+            float2 xyLeftNear = RenderingHelper.ViewToScreen(float4(centerPos.xy - sphere.radius, sphereZNear, 1.0f), screenDimension, ref projectionMat);
+            float2 xyLeftFar = RenderingHelper.ViewToScreen(float4(centerPos.xy - sphere.radius, sphereZFar, 1.0f), screenDimension, ref projectionMat);
+            float2 xyRightNear = RenderingHelper.ViewToScreen(float4(centerPos.xy + sphere.radius, sphereZNear, 1.0f), screenDimension, ref projectionMat);
+            float2 xyRightFar = RenderingHelper.ViewToScreen(float4(centerPos.xy + sphere.radius, sphereZFar, 1.0f), screenDimension, ref projectionMat);
+
+            int2 minIndexXY = Cluster.GetClusterXYIndexFromScreenPos(math.min(xyLeftNear, xyLeftFar), clusterSize);
+            int2 maxIndexXY = Cluster.GetClusterXYIndexFromScreenPos(math.max(xyRightNear, xyRightFar), clusterSize);
             
             minIndexXY.x = max(0, minIndexXY.x);
             minIndexXY.y = max(0, minIndexXY.y);
             maxIndexXY.x = min(clusterCount.x - 1, maxIndexXY.x);
             maxIndexXY.y = min(clusterCount.y - 1, maxIndexXY.y);
 
-            int minIndexZ = max(0, Cluster.GetClusterZIndex(centerPos.z + sphere.radius, clusterZFar, clusterCount.z, zLogFactor));
-            int maxIndexZ = min(clusterCount.z - 1, Cluster.GetClusterZIndex(centerPos.z - sphere.radius, clusterZFar, clusterCount.z, zLogFactor));
+            int minIndexZ = max(0, Cluster.GetClusterZIndex(sphereZNear, clusterZFar, clusterCount.z, zLogFactor));
+            int maxIndexZ = min(clusterCount.z - 1, Cluster.GetClusterZIndex(sphereZFar, clusterZFar, clusterCount.z, zLogFactor));
 
             aabb.min = int3(minIndexXY, minIndexZ);
             aabb.max = int3(maxIndexXY, maxIndexZ);

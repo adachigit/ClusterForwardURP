@@ -291,7 +291,9 @@ namespace Rendering.RenderPipeline
 
         public static int GetClusterZIndex(float viewZ, float clusterZFar, int clusterCountZ, float logFactor)
         {
-            return (int)(log2(-viewZ / clusterZFar) / logFactor + clusterCountZ);
+            int index = (int)(log2(abs(viewZ) / clusterZFar) / logFactor + clusterCountZ);
+
+            return viewZ > 0 ? -index : index;    // 如果原始z为正值，说明在摄像机后面，返回负值索引。
         }
 
         public static bool IsValidIndex3D(int3 index3D, int3 clustersCount)

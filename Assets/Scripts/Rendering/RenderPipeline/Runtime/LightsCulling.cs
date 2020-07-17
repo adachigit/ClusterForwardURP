@@ -101,6 +101,7 @@ namespace Rendering.RenderPipeline
                 zLogFactor = cluster.zLogFactor,
                 isClusterZPrior = cluster.rendererData.zPriority,
                 maxLightsCountPerCluster = cluster.rendererData.lightsCountPerCluster,
+                cameraZNear = camera.nearClipPlane,
 
                 clusterLightIndices = GetLightIndicesContainer(camera, cluster),
                 clusterLightsCount = GetLightsCountContainer(camera, cluster),

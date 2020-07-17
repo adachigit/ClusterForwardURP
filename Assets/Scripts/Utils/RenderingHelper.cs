@@ -49,6 +49,7 @@ namespace Utils
 
         public static float2 ViewToScreen(float4 viewPos, float2 screenDimension, ref float4x4 projectMatrix)
         {
+            viewPos.z = -abs(viewPos.z);    // 确保z为负值以获得正确的剪切空间坐标
             var clipPos = mul(projectMatrix, viewPos);
             clipPos /= clipPos.w;
             

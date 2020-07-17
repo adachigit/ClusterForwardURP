@@ -20,17 +20,18 @@ namespace Rendering.RenderPipeline.Jobs
         {
             public ClusterForwardLights.LightInfo lightInfo;
             public int3 clusterIndex3D;
+            public bool isValid;
         }
 
         struct Comparer : IComparer<LightSortInfo>
         {
             public int Compare(LightSortInfo x, LightSortInfo y)
             {
-                if (x.clusterIndex3D.x < 0 && y.clusterIndex3D.x < 0)
+                if (!x.isValid && !y.isValid)
                     return 0;
-                else if (x.clusterIndex3D.x < 0)
+                else if (!x.isValid)
                     return 1;
-                else if (y.clusterIndex3D.x < 0)
+                else if (!y.isValid)
                     return -1;
                 
                 if (x.lightInfo.visibleLight.lightType == y.lightInfo.visibleLight.lightType && x.lightInfo.visibleLight.lightType == LightType.Directional)
@@ -187,6 +188,7 @@ namespace Rendering.RenderPipeline.Jobs
                         ref clusterCount,
                         clusterZFar,
                         zLogFactor),
+                    isValid = true,
                 };
             }
 
@@ -194,7 +196,7 @@ namespace Rendering.RenderPipeline.Jobs
             {
                 sortedInfoArray[i] = new LightSortInfo
                 {
-                    clusterIndex3D = int3(-1, -1, -1),
+                    isValid = false,
                 };
             }
             
